@@ -7,6 +7,13 @@ clc; close all; clear all;
 % > Route
 % > Weather: Wing vectors along route 
 % > Flight profile
+
+addpath("..\EngineModelCode\")
+addpath("..\MassPropertiesCode\")
+addpath("..\PerformanceAnalysisCode\")
+addpath("..\SeniorDesignTeamASizingCode\")
+addpath("..\WindAnalysisCode\")
+
 %% Aircraft Configuration
 aircraft_info = readlines('Aircraft Info.txt');
 Wto = str2double(aircraft_info(3)); % Takeoff Weight
@@ -23,7 +30,8 @@ n = str2double(aircraft_info(21));
 
 %% Route and Weather
 % Import Flight Profile from text file
-sector_filename = "Aircraft Sector Split 6.txt"
+sector_filename = "Aircraft Sector Split 6.txt";
+disp("Mission Parameters from: " + sector_filename)
 route = readlines(sector_filename); %%%
 point_dist = str2double(route(2));
 n_control = str2double(route(4));
