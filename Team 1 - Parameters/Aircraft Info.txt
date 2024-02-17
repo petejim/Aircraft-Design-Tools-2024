@@ -1,0 +1,23 @@
+--Aircraft Info--
+Wto:
+10000
+K:
+0.0114
+Cd0:
+0.017
+S(ft^2):
+280
+AR:
+37.5
+Eta:
+0.8
+
+--Engine Info--
+MinSFC:	
+0.33
+MaxBHP:	
+350
+PointsNumber:	
+1000
+Engine Type:
+G
