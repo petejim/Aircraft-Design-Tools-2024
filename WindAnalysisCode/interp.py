@@ -78,5 +78,5 @@ def calculate_intermediate_points(waypoints, point_dist):
 
 points = calculate_intermediate_points(waypoints, point_dist)
 
-for point in points:
-    print(point)
+# for point in points:
+#     print(point)

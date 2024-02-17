@@ -21,10 +21,10 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
     end
 
     % Path to the Python script
-    filePath = 'D:\SCHOOL\2023-24 School Shit\2 - Winter Quarter\AERO 444\WindAnalysisTool\interp.py'; % Replace with your file path
+%     filePath = '..\WindAnalysisCode\interp.py"'; % Replace with your file path
     
     % Run the Python script with pyrunfile
-    [points]= pyrunfile(filePath, 'points', waypoints = pyWaypoints, point_dist = point_dist);
+    [points]= pyrunfile("interp.py", 'points', waypoints = pyWaypoints, point_dist = point_dist);
 
     Length = length(points);
     
