@@ -97,15 +97,15 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
 
     end
 
-    figure()
-    hold on
-    for i = 1:4
-        plot(distance, tail(i,:))
-    end
-    figure()
-    hold on
-    for i = 1:4
-        plot(distance, cross(i,:))
-    end
+%     figure()
+%     hold on
+%     for i = 1:4
+%         plot(distance, tail(i,:))
+%     end
+%     figure()
+%     hold on
+%     for i = 1:4
+%         plot(distance, cross(i,:))
+%     end
 
 end
