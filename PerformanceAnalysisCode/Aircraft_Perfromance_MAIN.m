@@ -8,7 +8,7 @@ clc; close all; clear all;
 % > Weather: Wing vectors along route 
 % > Flight profile
 
-addpath("..\")
+addpath(genpath("..\"))
 
 %% Aircraft Configuration
 aircraft_filename = "Aircraft Info.txt";
@@ -90,7 +90,7 @@ for i = 1:sizeSEC(1)
 % Flight Sector Analysis
     % 1: Full Throttle Climb
     if sectors(i,1) == 1
-        disp("Start of Full Throttle Climb:     " + size(AS,1) + " iteration")
+        disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
         [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
@@ -98,7 +98,7 @@ for i = 1:sizeSEC(1)
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
     elseif sectors(i,1) == 2
-        disp("Start of Constant Rate Climb:     " + size(AS,1) + " iteration")
+        disp("Start of Constant Rate Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
         [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
@@ -106,11 +106,11 @@ for i = 1:sizeSEC(1)
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
     elseif sectors(i,1) == 3
-        disp("Start of Const Alt. & Airspeed Cruise: " + size(AS,1) + " iteration")
+        disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
         [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,n,k,Cd0);
     % 4: Cruise, constant Cl, constant TAS
     elseif sectors(i,1) == 4
-        disp("Start of Cruise Climb: " + size(AS,1) + " iteration")
+        disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
         Optimal_Cl = sectors(i,8);
         Optimal_Cd = Cd0 + k*(Optimal_Cl^2);
         [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
