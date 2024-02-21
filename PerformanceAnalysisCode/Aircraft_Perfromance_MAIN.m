@@ -11,7 +11,7 @@ clc; close all; clear all;
 addpath(genpath("..\"))
 
 %% Aircraft Configuration
-aircraft_filename = "T1 - Aircraft Info.txt";
+aircraft_filename = "Aircraft Info.txt";
 aircraft_info = readlines(aircraft_filename);
 disp("Aircraft Parameters:  " + aircraft_filename)
 Wto = str2double(aircraft_info(3)); % Takeoff Weight
@@ -29,7 +29,7 @@ service_ceiling = str2double(aircraft_info(25));
 
 %% Route and Weather
 % Import Flight Profile from text file
-sector_filename = "Turbo Climb.txt";
+sector_filename = "Aircraft Sector Split.txt";
 disp("Mission Parameters:   " + sector_filename)
 disp(" ")
 route = readlines(sector_filename); %%%
