@@ -5,7 +5,7 @@ clc; close all; clear all;
 % Perfromance script to integrate:
 % > Aircraft Configuration/Engine Selection 
 % > Route
-% > Weather: Wing vectors along route 
+% > Weather: Wing vectors along route
 % > Flight profile
 
 addpath(genpath("..\"))
