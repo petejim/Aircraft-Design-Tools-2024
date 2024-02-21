@@ -24,6 +24,7 @@ MinSFC = str2double(aircraft_info(17));
 MaxBHP = str2double(aircraft_info(19));
 EngineType = aircraft_info(23);
 n = str2double(aircraft_info(21));
+service_ceiling = str2double(aircraft_info(25));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
 
 %% Route and Weather
@@ -93,7 +94,7 @@ for i = 1:sizeSEC(1)
         disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
+        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
         newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
@@ -101,19 +102,19 @@ for i = 1:sizeSEC(1)
         disp("Start of Constant Rate Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
+        [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
         newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
     elseif sectors(i,1) == 3
         disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
-        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,n,k,Cd0);
+        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,Cd0);
     % 4: Cruise, constant Cl, constant TAS
     elseif sectors(i,1) == 4
         disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
         Optimal_Cl = sectors(i,8);
         Optimal_Cd = Cd0 + k*(Optimal_Cl^2);
-        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
+        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
 
     else
         error('Input Valid Sector Type (1-4)')

@@ -1,4 +1,4 @@
-function [AS] = cruise_cnst_v_h_final(AS,AP,cruise_distance,speed,delta_time,all_tailwind,distance,EngineType,SeaLevelMatrix,MinSFC,n,k,Cd0)
+function [AS] = cruise_cnst_v_h_final(AS,AP,cruise_distance,speed,delta_time,all_tailwind,distance,EngineType,SeaLevelMatrix,MinSFC,service_ceiling,n,k,Cd0)
 
 % function for a constant altitude, constant true airspeed cruise
 % takes in sfc matrix data from RV7
@@ -56,7 +56,7 @@ mode_number = 3;
 rho = rho_SI*kgm3_2_slugft3 ; % slug/ft3
 S = AP(1); % wing area - square feet
 g0 = 32.174; % ft per second squared (assuming gravity is constant with altitude)
-[AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelMatrix, MinSFC, altitude, n);
+[AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelMatrix, MinSFC, altitude,service_ceiling, n);
 
 % Euler
 i = size(AS,1);    % Sets the starting point of the function at the end of the Airplane State (AS)
