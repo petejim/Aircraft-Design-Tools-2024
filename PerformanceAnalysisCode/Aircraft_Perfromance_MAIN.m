@@ -63,15 +63,17 @@ numArrays = length(dates);
 all_tailwind = cell(1, numArrays);
 
 tic
-for i = 1:length(dates)
-    [all_tailwind{i},cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(control_points_longlat, point_dist, dates(i));
-    disp("Weather Data for Day " + i + " Collected")
-end
-lat_long = [latitudes',longitudes'];
+% for i = 1:length(dates)
+%     [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(control_points_longlat, point_dist, dates(i));
+%     disp("Weather Data for Day " + i + " Collected")
+% end
+% lat_long = [latitudes',longitudes'];
+
+load("Dec1-Dec10_tailwind.mat")
+load("SouthHem_Team1_100NM_distance.mat")
+
 weather_matrix_creation_time = toc;
 
-% load("Dec1-Dec10_all_tailwind.mat")
-% load("SouthHem-Team1-100NM.mat")
 
 % Weather Loading
 disp(" ")
@@ -94,7 +96,7 @@ for i = 1:sizeSEC(1)
         disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
+        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb_v2(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
         newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
@@ -131,34 +133,34 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 
 %% plotting
 
-% figure
-% plot(AS(:,2),AS(:,4))
-% title('Altitude')
-% xlabel('dist (nmi)')
-% ylabel('alt (ft)')
+figure
+plot(AS(:,2),AS(:,4))
+title('Altitude')
+xlabel('dist (nmi)')
+ylabel('alt (ft)')
 
-% figure
-% plot(AS(:,2),AS(:,3))
-% title('weight')
-% xlabel('dist (nmi)')
-% ylabel('total weight (lbs)')
+figure
+plot(AS(:,2),AS(:,3))
+title('weight')
+xlabel('dist (nmi)')
+ylabel('total weight (lbs)')
 
-% figure
-% plot(AS(:,2),AS(:,7))
-% title('Power')
-% xlabel('dist (nmi)')
-% ylabel('power (hp)')
+figure
+plot(AS(:,2),AS(:,7))
+title('Power')
+xlabel('dist (nmi)')
+ylabel('power (hp)')
 
-% figure
-% hold on
-% groundspeedAVG = mean(AS(2782:end,6))
-% plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
-% plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
-% yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
-% yl1.Color = [0.722 0.027 0.027];
-% xlabel('Distance (nautical miles)')
-% ylabel('Speed (knots)')
-% xlim([0,AS(end,2)])
+figure
+hold on
+groundspeedAVG = mean(AS(2782:end,6))
+plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
+plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
+yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
+yl1.Color = [0.722 0.027 0.027];
+xlabel('Distance (nautical miles)')
+ylabel('Speed (knots)')
+xlim([0,AS(end,2)])
 
 %% Quick Maths
 day6 = all_tailwind{6};
@@ -173,3 +175,4 @@ disp("Flew " + AS(end,2) + " NM")
 disp("Average Cruise CL: " + mean(AS(3924:end,9)))
 disp("Average Cruise Power: " + mean(AS(3924:end,7)))
 disp("Fuel Consumed: " + (AS(1,3)-AS(end,3)) + " lb")
+disp("Mission Duration: " + AS(end,1)/60 + " minutes")
