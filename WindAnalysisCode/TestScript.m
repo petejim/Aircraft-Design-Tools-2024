@@ -41,6 +41,18 @@ point_dist = 400;
 
 [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(waypoints, point_dist, "01-Sep-2023");
 
+%%
+
+longitudes(longitudes > 180) = longitudes(longitudes > 180) -360;
+lat_long = [latitudes;longitudes];
+figure
+geoplot(latitudes, longitudes, ".-")
+
+%% 
+figure
+plot(unitx)
+hold on
+plot(unity)
 
 
 
