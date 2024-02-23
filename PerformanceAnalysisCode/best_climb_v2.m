@@ -42,7 +42,7 @@ path(1) = 2; % initial path angle (degrees)
 i = 1;
 while alt < alt2
     % Solve Aerodynamics
-    v(i) = sqrt(2*W(i))/(rho(i)*S) * ((k/(3*Cd0))^0.25);
+    v(i) = sqrt(2*W(i))/(rho(i)*S) * ((k/(3*Cd0))^0.25);        % TAS [ft/s]
     Cl(i) = (2*(W(i)*cosd(path(i))))/(rho(i)*S*(v(i))^2);
     Cd(i) = Cd0 + (k*(Cl(i)^2)); %from drag polar given
     D(i) = 0.5*rho(i)*Cd(i)*S*(v(i))^2; % lbf
@@ -54,7 +54,7 @@ while alt < alt2
     sfc(i) = AdjEngineDeck(end,2);
 
     % Current State
-    x_dot(i) = v(i)*cosd(path(i)); % ft/s
+    x_dot(i) = v(i)*cosd(path(i));                      % Groundspeed [ft/s]
     W_dot = (-sfc(i)*max_power_avail(i))/3600; % divide by 3600 to get in lbf/s
 
     % Update State

@@ -16,7 +16,7 @@ Missions = [    "Turbo_Climb_2000_8000.txt";
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
-all_results_cases = strings(size(all_results));
+all_results_cases = nan(size(all_results));
 
 for aircraft_case = 1:length(Aircrafts)
     aircraft_filename = Aircrafts(aircraft_case);
@@ -137,7 +137,6 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 
 all_results{aircraft_case,mission_case} = AS_table;
 
-
 %% plotting
 % figure
 % plot(AS(:,2),AS(:,4))
@@ -189,8 +188,6 @@ disp("Flew " + AS(end,2) + " NM")
 disp("Fuel Consumed: " + (AS(1,3)-AS(end,3)) + " lb")
 disp("Mission Duration: " + AS(end,1)/60 + " minutes or " + AS(end,1)/3600 + " hours or " + AS(end,1)/3600/24 + ' days')
 
-clear AS;
-clear AP;
 
 end
 end
