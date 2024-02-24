@@ -1,4 +1,4 @@
-function [AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelMatrix, MinSFC, Altitude, n)
+function [AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelMatrix, MinSFC, Altitude, ServiceCeiling, n)
 %-----------------Rev. Date 2/2/2024 @ 2:20 PM---------------------------
 %Change sea level engine deck to reflect change in altitudes
 %EngineType = String that specifies diesel or gas type engine
@@ -19,6 +19,13 @@ function [AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelMatrix, MinSFC, A
 t_sealevel = 288.15; % Kelvin
 p_sealevel = 2116.23; % lb-f/ft^2
 rho_sealevel = 0.00237717; % slug/ft^3
+
+if Altitude - ServiceCeiling < 0 
+    AdjEngineDeck = SeaLevelMatrix;
+    return; 
+else
+    Altitude = Altitude - ServiceCeiling; 
+end
 
 % Local atmospheric conditions
 T = 0; % Offset

@@ -27,7 +27,7 @@ def calculate_unit_vector(start_point, end_point):
 
 def calculate_intermediate_points(waypoints, point_dist):
     # Convert distance per point to kilometers
-    distance_per_point = point_dist
+    distance_per_point = point_dist     # [NM]
 
     all_intermediate_points = []
     previous_point = None  # Initialize previous point
@@ -37,7 +37,7 @@ def calculate_intermediate_points(waypoints, point_dist):
         end_point = waypoints[(i + 1) % len(waypoints)]
 
         # Calculate the total distance between the two waypoints
-        total_distance = gcc.distance_between_points(start_point, end_point, unit='miles', haversine=True)
+        total_distance = gcc.distance_between_points(start_point, end_point, unit='nautical_miles', haversine=True)
 
         # Calculate the number of intermediate points needed
         num_points = int(total_distance / distance_per_point)
@@ -59,7 +59,7 @@ def calculate_intermediate_points(waypoints, point_dist):
 
             # Calculate distance from the previous point
             if previous_point is not None:
-                distance_from_previous = gcc.distance_between_points(previous_point, current_point, unit='miles', haversine=True)
+                distance_from_previous = gcc.distance_between_points(previous_point, current_point, unit='nautical_miles', haversine=True)
                 unit_vector = calculate_unit_vector(previous_point, current_point)
             else:
                 distance_from_previous = 0.0  # First point has no previous point

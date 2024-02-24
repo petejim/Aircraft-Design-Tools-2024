@@ -5,7 +5,7 @@ clc; close all; clear all;
 % Perfromance script to integrate:
 % > Aircraft Configuration/Engine Selection 
 % > Route
-% > Weather: Wing vectors along route 
+% > Weather: Wing vectors along route
 % > Flight profile
 
 addpath(genpath("..\"))
@@ -24,11 +24,12 @@ MinSFC = str2double(aircraft_info(17));
 MaxBHP = str2double(aircraft_info(19));
 EngineType = aircraft_info(23);
 n = str2double(aircraft_info(21));
+service_ceiling = str2double(aircraft_info(25));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
 
 %% Route and Weather
 % Import Flight Profile from text file
-sector_filename = "Mission Parameters 1.txt";
+sector_filename = "Aircraft Sector Split.txt";
 disp("Mission Parameters:   " + sector_filename)
 disp(" ")
 route = readlines(sector_filename); %%%
@@ -60,17 +61,19 @@ control_points_longlat(:,2) = control_points_latlong(:,1);
 numArrays = length(dates);
 % Initialize a cell array to store all the tail wing data arrays
 all_tailwind = cell(1, numArrays);
+all_crosswind= cell(1, numArrays);  
 
 tic
 for i = 1:length(dates)
-    [all_tailwind{i},cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(control_points_longlat, point_dist, dates(i));
+    [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(control_points_longlat, point_dist, dates(i));
     disp("Weather Data for Day " + i + " Collected")
 end
 lat_long = [latitudes',longitudes'];
-weather_matrix_creation_time = toc;
 
-% load("Dec1-Dec10_all_tailwind.mat")
-% load("SouthHem-Team1-100NM.mat")
+% load("Dec1-Dec10_tailwind.mat")
+% load("SouthHem_Team1_100NM_distance.mat")
+
+weather_matrix_creation_time = toc;
 
 % Weather Loading
 disp(" ")
@@ -93,7 +96,7 @@ for i = 1:sizeSEC(1)
         disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
+        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb_v2(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
         newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
@@ -101,19 +104,19 @@ for i = 1:sizeSEC(1)
         disp("Start of Constant Rate Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,n,AP(1),k,Cd0);
+        [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
         newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
     elseif sectors(i,1) == 3
         disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
-        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,n,k,Cd0);
+        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,Cd0);
     % 4: Cruise, constant Cl, constant TAS
     elseif sectors(i,1) == 4
         disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
         Optimal_Cl = sectors(i,8);
         Optimal_Cd = Cd0 + k*(Optimal_Cl^2);
-        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
+        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
 
     else
         error('Input Valid Sector Type (1-4)')
@@ -135,19 +138,19 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 % title('Altitude')
 % xlabel('dist (nmi)')
 % ylabel('alt (ft)')
-
+% 
 % figure
 % plot(AS(:,2),AS(:,3))
 % title('weight')
 % xlabel('dist (nmi)')
 % ylabel('total weight (lbs)')
-
+% 
 % figure
 % plot(AS(:,2),AS(:,7))
 % title('Power')
 % xlabel('dist (nmi)')
 % ylabel('power (hp)')
-
+% 
 % figure
 % hold on
 % groundspeedAVG = mean(AS(2782:end,6))
@@ -169,6 +172,8 @@ end
 disp(" ")
 disp("-----------Results------------")
 disp("Flew " + AS(end,2) + " NM")
-disp("Average Cruise CL: " + mean(AS(3924:end,9)))
-disp("Average Cruise Power: " + mean(AS(3924:end,7)))
+%
+% disp("Average Cruise CL: " + mean(AS(###:end,9)))
+% disp("Average Cruise Power: " + mean(AS(###:end,7)))
 disp("Fuel Consumed: " + (AS(1,3)-AS(end,3)) + " lb")
+disp("Mission Duration: " + AS(end,1)/60 + " minutes or " + AS(end,1)/3600 + " hours or " + AS(end,1)/3600/24 + ' days')

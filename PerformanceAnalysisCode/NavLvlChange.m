@@ -1,4 +1,4 @@
-function [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(Wi,Vi,alt1,alt2,eta,delta_T,delta_time,climb_rate,EngineType,SeaLevelEngine,MinSFC,n,S,k,Cd0)
+function [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(Wi,Vi,alt1,alt2,eta,delta_T,delta_time,climb_rate,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,S,k,Cd0)
 
 % INPUTS:
 % Wi - initial weight in lbf or lbm*(ft/s2)
@@ -58,7 +58,7 @@ if alt1 < alt2
         rate_climb(i) = v(i) * sin(path(i)); % climb rate 
 
         % Climb Power 
-        [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),n); % change power matrix
+        [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),service_ceiling,n); % change power matrix
         power_req_level(i) = (D(i)*v(i))/(HPconv*eta); % sea level power 
         power_req(i) = power_req_level(i) + ((rate_climb(i)*W(i))/HPconv); % required climb power
         p_avail(i) = max(AdjEngineDeck(:,1)); % max available shaft power

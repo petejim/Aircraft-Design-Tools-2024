@@ -1,9 +1,8 @@
-function [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(Wi,alt1,alt2,eta,delta_T,delta_time,EngineType,SeaLevelEngine,MinSFC,n,S,k,Cd0)
+function [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb(Wi,alt1,alt2,eta,delta_T,delta_time,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,S,k,Cd0)
 % INPUTS:
 % Wi - initial weight in lbf or lbm*(ft/s2)
 % alt1 - Initial Altitude
 % alt1 - Final Altitude
-% speed - cruise speed in knots
 % eta - propeller efficiency
 % delta_T - off standard temperature difference in Fahrenheit
 % delta_time - time step in seconds
@@ -47,9 +46,9 @@ while alt < alt2
     Cd(i) = Cd0 + (k*(Cl(i)^2)); %from drag polar given
     D(i) = 0.5*rho(i)*Cd(i)*S*(v(i))^2; % lbf
     T = D(i);
-
+    
     % Power
-    [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),n); % change Power Check
+    [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),service_ceiling,n); % change Power Check
     p_avail(i) = max(AdjEngineDeck(:,1)); % max available shaft power
     P_req(i) = (((D(i)*v(i))/eta)/550)*eta; % divide by 550 to put into hp
     if P_req(i) > p_avail(i)

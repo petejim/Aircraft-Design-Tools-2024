@@ -4,7 +4,7 @@
 % Function for a constant CL, constant airspeed cruise (aka cruise climb) simulation
 % Requires the drag polar or the value of CL
 
-function [AS] = cruise_cnst_CL_v2(dt_sec, AP, AS, EngineType, SeaLevelEngine, MinSFC, n, all_tailwind, distance, v_cruise_knots, distance_target_nm, CL_cruise, CD_cruise)
+function [AS] = cruise_cnst_CL_v2(dt_sec, AP, AS, EngineType, SeaLevelEngine, MinSFC, service_ceiling, n, all_tailwind, distance, v_cruise_knots, distance_target_nm, CL_cruise, CD_cruise)
 % AS [ time(sec), distance(nm), weight(lbf), altitude(ft), airspeed(knots), ground speed(knots), power(hp), sfc, CL, CD, mode]
 % AP [ ]
 % SeaLevelMatrix - baseline engine performance produced by engine model
@@ -105,7 +105,7 @@ while x(i) <= x(1)+distance_target_ft
     power_shaft(i) = (power_required_hp(i)/eta);            % [hp]
     
     % Solving for Power Output and SFC
-    [AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, y(i), n);   % y(i) because we are solving for power needed NOW to solve for power needed to get to next state
+    [AdjEngineDeck] = ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, y(i),service_ceiling, n);   % y(i) because we are solving for power needed NOW to solve for power needed to get to next state
     solve = abs(AdjEngineDeck(:,1) - power_shaft(i));
     [~,I] = min(solve);
     power_output(i) = AdjEngineDeck(I,1);

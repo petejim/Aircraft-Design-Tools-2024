@@ -16,8 +16,10 @@ Eta:
 MinSFC:	
 0.33
 MaxBHP:	
-350
+404
 PointsNumber:	
 1000
 Engine Type:
-G
+D
+Service Ceiling [ft] (0 if no turbo):
+18000
