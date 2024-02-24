@@ -100,7 +100,7 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
     point_distance = points(:,3);
     unitx = points(:,4);
     unity = points(:,5);
-
+    longitudes(longitudes < 0) = longitudes(longitudes < 0) + 360; 
     % Statute miles might want to change this in the future
     distance = cumsum(point_distance);
 
@@ -142,16 +142,16 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
 
     end
 
-    figure()
-    hold on
-    for i = 1:4
-        plot(distance, tail(i,:))
-    end
-    figure()
-    hold on
-    for i = 1:4
-        plot(distance, cross(i,:))
-    end
+%     figure()
+%     hold on
+%     for i = 1:4
+%         plot(distance, tail(i,:))
+%     end
+%     figure()
+%     hold on
+%     for i = 1:4
+%         plot(distance, cross(i,:))
+%     end
 
 end
 
