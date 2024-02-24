@@ -1,4 +1,4 @@
-clc; close all; clear all;
+clc; close all; clear;
 
 % Aircraft Performance MAIN 
 
@@ -29,17 +29,32 @@ service_ceiling = str2double(aircraft_info(25));
 
 %% Route and Weather
 % Import Flight Profile from text file
-sector_filename = "Aircraft Sector Split.txt";
-disp("Mission Parameters:   " + sector_filename)
+
+sector_filename = "Mission Info.txt";
+disp("Control Points:       " + sector_filename)
 disp(" ")
 route = readlines(sector_filename); %%%
 point_dist = str2double(route(2));
 n_control = str2double(route(4));
 alt_airport = str2double(route(6));
 dates = route(8:17);
-route = readmatrix(sector_filename); %%%
-control_points_latlong = route(1:n_control,1:2);
-sectors = route(2+n_control:length(route),1:8);
+control_point_cells = cellfun(@(x) split(x, ','), route(19:19+n_control-1,1), 'UniformOutput', false);
+control_points_latlong = nan(n_control,2);
+for i = 1:length(control_point_cells)
+    for j = 1:2
+        control_points_latlong(i,j) = str2double(control_point_cells{i}{j});
+    end
+end
+sectors_cells = cellfun(@(x) split(x, ','), route(19+n_control+1:end,1), 'UniformOutput', false);
+sectors = nan(length(sectors_cells));
+for i = 1:length(sectors_cells)
+    for j = 1:8
+        sectors(i,j) = str2double(sectors_cells{i}{j});
+    end
+end
+
+
+% Sector Table Label
 sectors_column_labels = {'FlightType', 'Altitude1 [ft]', 'Altitude2 [ft]', 'TAS [knots]',	'VertSpeed', 'Distance [NM]', 'timestep [sec]', 'Optimal_Cl'};
 sectors_table = array2table(sectors, 'VariableNames', sectors_column_labels);
 
