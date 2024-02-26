@@ -80,7 +80,7 @@ all_crosswind= cell(1, numArrays);
 
 tic
 for i = 1:length(dates)
-    [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamF(control_points_longlat, point_dist, dates(i));
+    [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamFNoPy(control_points_longlat, point_dist, dates(i));
     disp("Weather Data for Day " + i + " Collected")
 end
 lat_long = [latitudes',longitudes'];
@@ -166,22 +166,25 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 % xlabel('dist (nmi)')
 % ylabel('power (hp)')
 % 
-% figure
-% hold on
-% groundspeedAVG = mean(AS(2782:end,6))
-% plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
-% plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
-% yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
-% yl1.Color = [0.722 0.027 0.027];
-% xlabel('Distance (nautical miles)')
-% ylabel('Speed (knots)')
-% xlim([0,AS(end,2)])
+figure
+hold on
+groundspeedAVG = mean(AS(2782:end,6))
+plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
+plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
+yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
+yl1.Color = [0.722 0.027 0.027];
+xlabel('Distance (nautical miles)')
+ylabel('Speed (knots)')
+xlim([0,AS(end,2)])
 
 %% Quick Maths
-day6 = all_tailwind{6};
+day4 = all_tailwind{4};
+day4_cross = all_crosswind{4};
 for i = 1:4
-    average_tailwind_start(i,1) = mean(day6(i,1:145));
-    average_tailwind_end(i,1) = mean(day6(i,145:end));
+%     average_tailwind_start(i,1) = mean(day6(i,1:145));
+%     average_tailwind_end(i,1) = mean(day6(i,145:end));
+    average_tailwind_day4(i,1) = mean(day4(i,:));
+    average_crosswind_day4(i,1) = mean(day4_cross(i,:));
 end
 
 disp(" ")
