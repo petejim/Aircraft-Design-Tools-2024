@@ -16,11 +16,11 @@ Input 10 consecutive days that you would lke to fly in (xx-Jan-xxxx) format:
 09-Dec-2023
 10-Dec-2023
 Control Points:
--21.45	-48.24
--27.059	10.19
--28.61	108.28
--39.09	-166.28
--0.35	-91.06
--21.45	-48.23
+-21.45, -48.24
+-27.059, 10.19
+-28.61, 108.28
+-39.09, -166.28
+-0.35, -91.06
+-21.45, -48.23
 FlightType	Altitude1	Altitude2	TAS	VertSpeed	Distance	timestep	Optimal_Cl
-1	2000	8000	-	-	-	1	-
+1, 2000,8000, -, -, -, 1, -
