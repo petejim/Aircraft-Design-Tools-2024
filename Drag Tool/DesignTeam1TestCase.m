@@ -129,6 +129,6 @@ minimumDrag = P(3);
 LDmax = max(LD);
 
 % display helpful values
-disp(['The minimum Drag Coefficient is ', num2str(minimumDrag)])
+disp(['The Minimum Drag Coefficient is ', num2str(minimumDrag)])
 disp(['The Drag Polar Equation is ', num2str(P(1)),'x^2 + ', num2str(P(2)), 'x + ', num2str(P(3))])
 disp(['The Max L/D is ', num2str(LDmax)])

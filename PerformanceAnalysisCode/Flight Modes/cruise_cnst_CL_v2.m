@@ -5,7 +5,7 @@
 % Requires the drag polar or the value of CL
 
 function [AS] = cruise_cnst_CL_v2(dt_sec, AP, AS, EngineType, SeaLevelEngine, MinSFC, service_ceiling, n, all_tailwind, distance, v_cruise_knots, distance_target_nm, CL_cruise, CD_cruise)
-% AS [ time(sec), distance(nm), weight(lbf), altitude(ft), airspeed(knots), ground speed(knots), power(hp), sfc, CL, CD, mode]
+% AS [ time(sec), distance(nm), weight(lbf), altitude(ft), airspeed(knots), ground speed(knots), power(hp), sfc, CL, CD, mode_#]
 % AP [ ]
 % SeaLevelMatrix - baseline engine performance produced by engine model
 % all_tailwind - cell containing all tailwind data
@@ -146,6 +146,9 @@ while x(i) <= x(1)+distance_target_ft
 %     end
 
     % Checkpoints
+    if i == 1
+        disp("      Change of " + dy(i) + " ft in altitude in the first iteration")
+    end
     if sfc(i) < 0
         disp("Negative SFC")
     elseif dx(i) < 0

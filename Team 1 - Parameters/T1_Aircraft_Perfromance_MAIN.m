@@ -10,13 +10,18 @@ clc; close all; clear;
 
 addpath(genpath("..\"))
 
-Aircrafts = [   "T1_325hp_T.txt";
-                "T1_404hp_T.txt"];
-Missions = [    "Turbo_Climb_2000_8000.txt";
+Aircrafts =[    "T1_Baseline_Aircraft.txt"];
+
+Missions = [    
+%                 "T1_CC-C.txt";
+%                 "T1_Climb-C.txt";
+                "T1_Climb-CC-C.txt"
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
+all_results_table = cell(length(Aircrafts),length(Missions));
 all_results_cases = strings(size(all_results));
+
 
 for aircraft_case = 1:length(Aircrafts)
     aircraft_filename = Aircrafts(aircraft_case);
@@ -31,7 +36,8 @@ disp("Aircraft Parameters:  " + aircraft_filename)
 Wto = str2double(aircraft_info(3)); % Takeoff Weight
 AP = [str2double(aircraft_info(9)),str2double(aircraft_info(11)),str2double(aircraft_info(13))]; % AP = [wing area (ft^2),AR, Eta]
 k = str2double(aircraft_info(5)); % Induced Drag Constant
-Cd0 = str2double(aircraft_info(7)); % Parasitic Drag
+CD0 = str2double(aircraft_info(7)); % Parasitic Drag
+Wf = str2double(aircraft_info(31)); % Fuel Weight [lbf]
 
 %% Engine Selection
 MinSFC = str2double(aircraft_info(17)); 
@@ -39,7 +45,9 @@ MaxBHP = str2double(aircraft_info(19));
 EngineType = aircraft_info(23);
 n = str2double(aircraft_info(21));
 service_ceiling = str2double(aircraft_info(25));
+n_engine = str2double(aircraft_info(27));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
+SeaLevelEngine(:,1) = SeaLevelEngine(:,1)*n_engine;
 
 %% Route and Weather
 % Import Flight Profile from text file
@@ -119,27 +127,43 @@ for i = 1:sizeSEC(1)
         disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,alt,P,v,x_dot,sfc,Cl,Cd] = best_climb_v2(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
-        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
+        [time,x,W,alt,P,v,x_dot,sfc,CL,CD] = best_climb_v2(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
+        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
     elseif sectors(i,1) == 2
         disp("Start of Constant Rate Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,P,alt,v,x_dot,sfc,Cl,Cd] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,Cd0);
-        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',Cl',Cd',sectors(i)*ones(length(time),1)];
+        [time,x,W,P,alt,v,x_dot,sfc,CL,CD] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
+        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(i)*ones(length(time),1)];
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
     elseif sectors(i,1) == 3
         disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
-        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,Cd0);
+        disp("      Cruise Altitude: " + AS(end,4) + " ft")
+        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,CD0);
+        
     % 4: Cruise, constant Cl, constant TAS
     elseif sectors(i,1) == 4
         disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
-        Optimal_Cl = sectors(i,8);
-        Optimal_Cd = Cd0 + k*(Optimal_Cl^2);
-        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),Optimal_Cl,Optimal_Cd);
+        CL = sectors(i,8);
+        if CL == 0
+% AS [ time(sec), distance(nm), weight(lbf), altitude(ft), airspeed(knots), ground speed(knots), power(hp), sfc, CL, CD, mode_#]
+            altitude = AS(end,4);   % [ft]
+            weight = AS(end,3);     % [lbf]
+            S = AP(1);              % [ft^2]
+            velocity = sectors(i,4) * 1.6878098571;   % [ft/s]
+            density = stdAtmosphere_imperial(altitude,0);   % [slugs/ft^3]
+            CL = 2 * weight / (density * velocity^2 * S);
+        elseif CL == 1
+            CL = sqrt(CD0/k);
+            disp("      Max L/D CL calculated to be: " + CL)
+        else
+            disp("Input 0 CL for automatic CL determination or 1 for max L/D CL")
+        end
+        CD = CD0 + k*(CL^2);
+        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),CL,CD);
 
     else
         error('Input Valid Sector Type (1-4)')
@@ -153,27 +177,27 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 
 %% plotting
 
-% figure
-% plot(AS(:,2),AS(:,4))
-% title('Altitude')
-% xlabel('dist (nmi)')
-% ylabel('alt (ft)')
-% 
+figure
+plot(AS(:,2),AS(:,4))
+title('Altitude')
+xlabel('dist (nmi)')
+ylabel('alt (ft)')
+
 % figure
 % plot(AS(:,2),AS(:,3))
 % title('weight')
 % xlabel('dist (nmi)')
 % ylabel('total weight (lbs)')
 % 
-% figure
-% plot(AS(:,2),AS(:,7))
-% title('Power')
-% xlabel('dist (nmi)')
-% ylabel('power (hp)')
+figure
+plot(AS(:,2),AS(:,7))
+title('Power')
+xlabel('dist (nmi)')
+ylabel('power (hp)')
 % 
 % figure
 % hold on
-% groundspeedAVG = mean(AS(2782:end,6))
+
 % plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
 % plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
 % yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
@@ -204,9 +228,14 @@ disp("Flew " + AS(end,2) + " NM")
 %
 % disp("Average Cruise CL: " + mean(AS(###:end,9)))
 % disp("Average Cruise Power: " + mean(AS(###:end,7)))
-disp("Fuel Consumed: " + (AS(1,3)-AS(end,3)) + " lb")
+groundspeedAVG = mean(AS(2782:end,6));
+disp("Average Groundspeed: " + groundspeedAVG + " knots")
+fuel_consumed = (AS(1,3)-AS(end,3));
+disp("Fuel Consumed: " + fuel_consumed + " lbf | Fuel Left: " + (Wf - fuel_consumed) + "lbf")
 disp("Mission Duration: " + AS(end,1)/60 + " minutes or " + AS(end,1)/3600 + " hours or " + AS(end,1)/3600/24 + ' days')
 
+all_results{aircraft_case, mission_case} = AS;
+all_results_table{aircraft_case, mission_case} = AS_table;
 clear AS;
 clear AP;
 

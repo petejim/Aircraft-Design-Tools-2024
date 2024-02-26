@@ -73,8 +73,8 @@ while AS(i,2) < cruise_distance + initial_dist
     Cl(i) = (2*W(i))/(rho*S*(v(i))^2);
     Cd(i) = Cd0 + k*(Cl(i)^2); %from drag polar given
     D(i) = 0.5*rho*Cd(i)*S*(v(i))^2; % lbf
-    P_shaft = ((D(i)*v(i))/AP(3))/550; % divide by 550 to put into hp
-    P(i) = P_shaft*AP(3); % in hp
+    P_required = ((D(i)*v(i)))/550; % divide by 550 to put into hp
+    P(i) = P_required/AP(3); % in hp
     [sfc] = EngineSFC(P(i),AdjEngineDeck); % find engine sfc function
     T = D(i); % lbf
     x_dot = v(i) + tailwind_fts; % ft/s
