@@ -10,12 +10,16 @@ clc; close all; clear;
 
 addpath(genpath("..\"))
 
-Aircrafts =[    "T1_Baseline_Aircraft.txt"];
+Aircrafts =[    
+%     "T1_Baseline_Aircraft.txt";
+        "T1_3Fuse_Simple.txt";
+    ];
 
 Missions = [    
 %                 "T1_CC-C.txt";
 %                 "T1_Climb-C.txt";
-                "T1_Climb-CC-C.txt"
+%                 "T1_Climb-CC-C.txt";
+                "T1_C8000.txt";
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -107,6 +111,9 @@ tic
 
 load("Dec1-Dec10_tailwind.mat")
 load("Dec1-Dec10_crosswind.mat")
+% load("Zero_Tailwind.mat")
+% load("Zero_Crosswind.mat")
+
 load("SouthHem_Team1_100NM_distance.mat")
 
 weather_matrix_creation_time = toc;
@@ -241,3 +248,16 @@ clear AP;
 
 end
 end
+%% Tom Foolery
+% Make a Zero Wind Matrix
+
+% Iterate through each cell element in the copied cell array
+% for i = 1:numel(all_tailwind)
+%     % Check if the element is a numeric array
+%     if isnumeric(all_tailwind{i})
+%         % Replace all the values with zeros
+%         all_tailwind{i}(:) = 0;
+%         all_crosswind{i}(:) = 0;
+%     end
+% end
+

@@ -10,10 +10,20 @@ clc; close all; clear;
 
 addpath(genpath("..\"))
 
-Aircrafts =[    "T1_Baseline_Aircraft.txt"];
-Missions = [    "T1_Cruise_Climb_Mission.txt"];
+Aircrafts =[    
+%     "T1_Baseline_Aircraft.txt";
+        "T1_3Fuse_Simple.txt";
+    ];
+
+Missions = [    
+%                 "T1_CC-C.txt";
+%                 "T1_Climb-C.txt";
+%                 "T1_Climb-CC-C.txt";
+                "T1_C8000.txt";
+                ];
 
 all_results = cell(length(Aircrafts),length(Missions));
+all_results_table = cell(length(Aircrafts),length(Missions));
 all_results_cases = strings(size(all_results));
 
 
@@ -101,6 +111,7 @@ tic
 
 load("Dec1-Dec10_tailwind.mat")
 load("Dec1-Dec10_crosswind.mat")
+all_tailwind = zero
 load("SouthHem_Team1_100NM_distance.mat")
 
 weather_matrix_creation_time = toc;
@@ -150,6 +161,11 @@ for i = 1:sizeSEC(1)
             velocity = sectors(i,4) * 1.6878098571;   % [ft/s]
             density = stdAtmosphere_imperial(altitude,0);   % [slugs/ft^3]
             CL = 2 * weight / (density * velocity^2 * S);
+        elseif CL == 1
+            CL = sqrt(CD0/k);
+            disp("      Max L/D CL calculated to be: " + CL)
+        else
+            disp("Input 0 CL for automatic CL determination or 1 for max L/D CL")
         end
         CD = CD0 + k*(CL^2);
         [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),CL,CD);
@@ -166,12 +182,12 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 
 %% plotting
 
-% figure
-% plot(AS(:,2),AS(:,4))
-% title('Altitude')
-% xlabel('dist (nmi)')
-% ylabel('alt (ft)')
-% 
+figure
+plot(AS(:,2),AS(:,4))
+title('Altitude')
+xlabel('dist (nmi)')
+ylabel('alt (ft)')
+
 % figure
 % plot(AS(:,2),AS(:,3))
 % title('weight')
@@ -220,11 +236,11 @@ disp("Flew " + AS(end,2) + " NM")
 groundspeedAVG = mean(AS(2782:end,6));
 disp("Average Groundspeed: " + groundspeedAVG + " knots")
 fuel_consumed = (AS(1,3)-AS(end,3));
-disp("Fuel Consumed: " + fuel_consumed + " lbf")
-disp("Fuel Left: " + (Wf - fuel_consumed) + "lbf")
+disp("Fuel Consumed: " + fuel_consumed + " lbf | Fuel Left: " + (Wf - fuel_consumed) + "lbf")
 disp("Mission Duration: " + AS(end,1)/60 + " minutes or " + AS(end,1)/3600 + " hours or " + AS(end,1)/3600/24 + ' days')
 
 all_results{aircraft_case, mission_case} = AS;
+all_results_table{aircraft_case, mission_case} = AS_table;
 clear AS;
 clear AP;
 
