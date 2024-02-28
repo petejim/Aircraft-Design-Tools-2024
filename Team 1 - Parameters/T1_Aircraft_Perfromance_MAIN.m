@@ -11,15 +11,19 @@ clc; close all; clear;
 addpath(genpath("..\"))
 
 Aircrafts =[    
-    "T1_Baseline_Aircraft.txt";
+%     "T1_Baseline_Aircraft.txt";
 %         "T1_3Fuse_Simple.txt";
+%     "T1_TwinFuse_Aircraft.txt";
+    "T1_3Fuse_Pressure.txt";
     ];
 
 Missions = [    
-                "T1_CC-C.txt";
-                "T1_Climb-C.txt";
+%                 "T1_CC-C.txt";
+%                 "T1_Climb-C.txt";
 %                 "T1_Climb-CC-C.txt";
 %                 "T1_C8000.txt";
+                "T1_CC-C25000.txt";
+
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -52,6 +56,7 @@ service_ceiling = str2double(aircraft_info(25));
 n_engine = str2double(aircraft_info(27));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
 SeaLevelEngine(:,1) = SeaLevelEngine(:,1)*n_engine;
+SeaLevelEngine(:,1) = SeaLevelEngine(:,1)-2;
 
 %% Route and Weather
 % Import Flight Profile from text file
@@ -204,11 +209,12 @@ LD = AS(:,9)./AS(:,10);
 % ylabel('total weight (lbs)')
 % 
 % figure
-% plot(AS(:,2),AS(:,7))
+% plot(AS(:,2),AS(:,7),"r")
 % title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power'})
 % xlabel('dist (nmi)')
 % ylabel('power (hp)')
-% 
+% ylim([0,300])
+% % 
 % figure
 % hold on
 % title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case; "Constant Altitude & Airspeed Cruise"})
@@ -225,7 +231,20 @@ plot(AS(:,2),LD)
 title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
 xlabel("Distance [NM]")
 ylabel("L/D")
-ylim([26 35])
+ylim([17.5 35])
+
+% figure
+% plot(AS(:,2),AS(:,3))
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Weight'})
+% xlabel("Distance [NM]")
+% ylabel("Weight [lbf]")
+
+% figure
+% plot(AS(:,2),AS(:,8))
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'SFC'})
+% xlabel("Distance [NM]")
+% ylabel("SFC")
+% ylim([.34, .41])
 
 %% Times
 % disp("----------Times----------")
@@ -234,14 +253,14 @@ ylim([26 35])
 % disp("Simulation of All Flight Modes Took: " + flight_mode_runtime + ' seconds')
 
 %% Quick Maths
-day4 = all_tailwind{4};
-day4_cross = all_crosswind{4};
-for i = 1:4
-%     average_tailwind_start(i,1) = mean(day6(i,1:145));
-%     average_tailwind_end(i,1) = mean(day6(i,145:end));
-    average_tailwind_day4(i,1) = mean(day4(i,:));
-    average_crosswind_day4(i,1) = mean(day4_cross(i,:));
-end
+% day4 = all_tailwind{4};
+% day4_cross = all_crosswind{4};
+% for i = 1:4
+% %     average_tailwind_start(i,1) = mean(day6(i,1:145));
+% %     average_tailwind_end(i,1) = mean(day6(i,145:end));
+%     average_tailwind_day4(i,1) = mean(day4(i,:));
+%     average_crosswind_day4(i,1) = mean(day4_cross(i,:));
+% end
 
 disp(" ")
 disp("-----------Results------------")
@@ -258,9 +277,14 @@ try
     disp("SFC")
     cruise_sfc = mean(AS(cruise_start:cruise_end,8));
     disp("Average SFC During Cruise: " + cruise_sfc)
+%     cruise_power = mean(AS(cruise_start:cruise_end,7));
+%     bruh = cruise_sfc * cruise_power* AS(end,1)/3600;
+%     disp(bruh)
     cruiseClimb_sfc = mean(AS(cruiseClimb_start:cruiseClimb_end,8));
     disp("Average SFC During Cruise Climb: " + cruiseClimb_sfc)
-    
+%     average_sfc = mean(AS(:,8));
+%     average_power = mean(AS(:,7));
+%     disp(AS(end,1)/3600 * average_power * average_sfc)
 catch
 end
 try
