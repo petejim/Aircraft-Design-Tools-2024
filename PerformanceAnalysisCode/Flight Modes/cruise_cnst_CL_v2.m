@@ -95,7 +95,7 @@ while x(i) <= x(1)+distance_target_ft
     % Solving for Power Required
     dy(i) = y(i+1) - y(i);              % if there is no density change (weight change), this should be zero
     airspeed_fts(i) = v_cruise_fts;                                   % [ft/s]
-    path_angle(i) = atan2(dy(i),airspeed_fts(i));                     % [rad]
+    path_angle(i) = atan2(dy(i)/dt,airspeed_fts(i));                     % [rad]
     D(i) = 0.5 * density(i) * v_cruise_fts^2 * S * CD;      % [lbf]
     thrust_required(i) = W(i)*sin(path_angle(i)) + D(i);    % [lbf]
 

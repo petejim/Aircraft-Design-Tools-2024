@@ -11,15 +11,15 @@ clc; close all; clear;
 addpath(genpath("..\"))
 
 Aircrafts =[    
-%     "T1_Baseline_Aircraft.txt";
-        "T1_3Fuse_Simple.txt";
+    "T1_Baseline_Aircraft.txt";
+%         "T1_3Fuse_Simple.txt";
     ];
 
 Missions = [    
-%                 "T1_CC-C.txt";
-%                 "T1_Climb-C.txt";
+                "T1_CC-C.txt";
+                "T1_Climb-C.txt";
 %                 "T1_Climb-CC-C.txt";
-                "T1_C8000.txt";
+%                 "T1_C8000.txt";
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -109,10 +109,13 @@ tic
 % end
 % lat_long = [latitudes',longitudes'];
 
-load("Dec1-Dec10_tailwind.mat")
-load("Dec1-Dec10_crosswind.mat")
-% load("Zero_Tailwind.mat")
-% load("Zero_Crosswind.mat")
+% load("Dec1-Dec10_tailwind.mat")
+% load("Dec1-Dec10_crosswind.mat")
+% disp("Weather from Dec 1 - Dec 10")
+
+load("Zero_Tailwind.mat")
+load("Zero_Crosswind.mat")
+disp("No Wind Assumed")
 
 load("SouthHem_Team1_100NM_distance.mat")
 
@@ -147,12 +150,14 @@ for i = 1:sizeSEC(1)
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
     elseif sectors(i,1) == 3
+        cruise_start = size(AS,1);
         disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
         disp("      Cruise Altitude: " + AS(end,4) + " ft")
         [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,CD0);
-        
+        cruise_end = size(AS,1);
     % 4: Cruise, constant Cl, constant TAS
     elseif sectors(i,1) == 4
+        cruiseClimb_start = size(AS,1);
         disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
         CL = sectors(i,8);
         if CL == 0
@@ -171,7 +176,7 @@ for i = 1:sizeSEC(1)
         end
         CD = CD0 + k*(CL^2);
         [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),CL,CD);
-
+        cruiseClimb_end = size(AS,1);
     else
         error('Input Valid Sector Type (1-4)')
     end
@@ -181,14 +186,16 @@ flight_mode_runtime = toc;
 % Create a readable table for the output matrix AS
 column_labels = {'Time [sec]','Distance [NM]', 'Weight [lbf]', 'Altitude [ft]', 'Airspeed [knots]', 'Ground Speed [knots]', 'Power [hp]', 'SFC', 'CL', 'CD', 'Mode #'};
 AS_table = array2table(AS, 'VariableNames', column_labels);
+groundspeedAVG = mean(AS(2782:end,6));
+LD = AS(:,9)./AS(:,10);
 
 %% plotting
 
-figure
-plot(AS(:,2),AS(:,4))
-title('Altitude')
-xlabel('dist (nmi)')
-ylabel('alt (ft)')
+% figure
+% plot(AS(:,2),AS(:,4))
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Altitude'})
+% xlabel('dist (nmi)')
+% ylabel('alt (ft)')
 
 % figure
 % plot(AS(:,2),AS(:,3))
@@ -196,22 +203,29 @@ ylabel('alt (ft)')
 % xlabel('dist (nmi)')
 % ylabel('total weight (lbs)')
 % 
-figure
-plot(AS(:,2),AS(:,7))
-title('Power')
-xlabel('dist (nmi)')
-ylabel('power (hp)')
+% figure
+% plot(AS(:,2),AS(:,7))
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power'})
+% xlabel('dist (nmi)')
+% ylabel('power (hp)')
 % 
 % figure
 % hold on
-
-% plot(AS(2782:end,2),AS(2782:end,5),LineWidth=1.5)
-% plot(AS(2782:end,2),AS(2782:end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case; "Constant Altitude & Airspeed Cruise"})
+% plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,5),LineWidth=1.5)
+% plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
 % yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
 % yl1.Color = [0.722 0.027 0.027];
 % xlabel('Distance (nautical miles)')
 % ylabel('Speed (knots)')
 % xlim([0,AS(end,2)])
+
+figure
+plot(AS(:,2),LD)
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
+xlabel("Distance [NM]")
+ylabel("L/D")
+ylim([26 35])
 
 %% Times
 % disp("----------Times----------")
@@ -235,17 +249,35 @@ disp("Flew " + AS(end,2) + " NM")
 %
 % disp("Average Cruise CL: " + mean(AS(###:end,9)))
 % disp("Average Cruise Power: " + mean(AS(###:end,7)))
-groundspeedAVG = mean(AS(2782:end,6));
 disp("Average Groundspeed: " + groundspeedAVG + " knots")
 fuel_consumed = (AS(1,3)-AS(end,3));
 disp("Fuel Consumed: " + fuel_consumed + " lbf | Fuel Left: " + (Wf - fuel_consumed) + "lbf")
 disp("Mission Duration: " + AS(end,1)/60 + " minutes or " + AS(end,1)/3600 + " hours or " + AS(end,1)/3600/24 + ' days')
 
+try
+    disp("SFC")
+    cruise_sfc = mean(AS(cruise_start:cruise_end,8));
+    disp("Average SFC During Cruise: " + cruise_sfc)
+    cruiseClimb_sfc = mean(AS(cruiseClimb_start:cruiseClimb_end,8));
+    disp("Average SFC During Cruise Climb: " + cruiseClimb_sfc)
+    
+catch
+end
+try
+    disp("L/D")
+    cruise_LD = mean(AS(cruise_start:cruise_end,9))/mean(AS(cruise_start:cruise_end,10));
+    disp("Average L/D During Cruise: " + cruise_LD)
+    cruiseClimb_LD = mean(AS(cruiseClimb_start:cruiseClimb_end,9))/mean(AS(cruiseClimb_start:cruiseClimb_end,10));
+    disp("Average L/D During Cruise Climb: " + cruiseClimb_LD)
+catch
+end
+
 all_results{aircraft_case, mission_case} = AS;
 all_results_table{aircraft_case, mission_case} = AS_table;
 clear AS;
 clear AP;
-
+clear cruiseClimb_end cruiseClimb_start;
+clear cruise_end cruise_start;
 end
 end
 %% Tom Foolery
@@ -260,4 +292,3 @@ end
 %         all_crosswind{i}(:) = 0;
 %     end
 % end
-

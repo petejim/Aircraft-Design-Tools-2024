@@ -3,7 +3,7 @@ Distance Between Path points (nmi):
 Number of control points:
 6
 Airport Altitude:
-300
+2000
 Input 10 consecutive days that you would lke to fly in (xx-Jan-xxxx) format:
 01-Dec-2023
 02-Dec-2023
@@ -23,6 +23,6 @@ Control Points:
 -0.35, -91.06
 -21.45, -48.24
 FlightType	Altitude1	Altitude2	TAS	VertSpeed	Distance	timestep	Optimal_Cl
-1, 300,   2500,  75,  -,   -,     1,  -
-4, -,     -,     112, -,   3600,   60, 0
-3, -,     -,     120, -,   16300, 60, -
+1, 2000,   2500,  75,  -,   -,     1,  -
+4, -,     -,     90, -,   4000,   60, 0
+3, -,     -,     90, -,   15900, 60, -
