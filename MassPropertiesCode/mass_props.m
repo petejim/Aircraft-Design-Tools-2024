@@ -39,6 +39,7 @@ function [weights, CG] = mass_props(inputs, config, coords)
 %   35  Wen - uninstalled weight of one engine                      [lb]
 %   36  Wuav - uninstalled avionics weight                          [lb]
 %   37  Wfl - total fuel weight                                     [lb]
+%   38  Vpr - pressurized volume                                    [ft^3]
 
 %   Config vector:
 %       config(1) - 0 = conventional horizantal tail or canard
@@ -65,7 +66,7 @@ function [weights, CG] = mass_props(inputs, config, coords)
 %   13  Elcx - electrical systems centroid x-coord
 
 
-% Wing Group:
+%% Wing Group:
 Sw = inputs(1);
 Wdg = inputs(2);
 Nz = inputs(3);
@@ -82,13 +83,13 @@ Kd = inputs(12);
 fuelDistCorr = (1-1.2*(Kb^.42-0.7*Kp^.3*Kb)*Kp)*(1-0.8*Kd);
 
 rhoSL = .002377; % [slug/ft^3]
-q = .5*rhoSL*(Vh*1.68781)^2; % dynamic pressure calculation
+q = .5*rhoSL*(Vh*1.68781)^2; % dynamic pressure calculation ----------------- NEED rhoSL
 
 W_wing = (0.036*Sw^0.758*Wfw^0.0035*(A/cosd(lambda14)^2)^0.6*q^0.006*...
     lambda^0.04*(100*tc/(cosd(lambda14)))^-0.3*(Nz*Wdg)^0.49)*fuelDistCorr;
 
 
-% Vertical Tail
+%% Vertical Tail
 Svt = inputs(13);
 lambda14_vt = inputs(14);
 lambda_vt = inputs(15);
@@ -96,21 +97,23 @@ lambda_vt = inputs(15);
 Ht_Hv = config(1);
 N_Vt = config(3);
 
+%Check this
 W_vt = N_Vt*(0.073*(1 + 0.2*(Ht_Hv))*(Nz*Wdg)^0.376*q^0.122*Svt^0.873*...
     (100*tc/cosd(lambda14_vt))^-0.49*(A/(cosd(lambda14_vt)^2))^0.357*lambda_vt^0.039);
 
 
-% Horizantal Tail
+%% Horizantal Tail
 Sht = inputs(16);
 lambda14_ht = inputs(17);
 lambda_ht = inputs(18);
 N_Ht = config(4);
 
+%Check this
 W_ht = N_Ht*(0.016*(Nz*Wdg)^0.414*q^0.168*Sht^0.896*(100*tc/cosd(lambda14))^-0.12...
     *(A/(cosd(lambda14_ht)^2))^0.043*lambda_ht^-0.02);
 
 
-% Landing Gear
+%% Landing Gear
 Nl = inputs(19);
 Wl = inputs(20);
 Lm = inputs(21);
@@ -121,16 +124,17 @@ W_main_LG = 0.095*(Nl*Wl)^0.768*(Lm)*0.409;
 W_nose_LG = 0.125*(Nl*Wl)^0.566*(Ln)^0.845;
 
 
-% Fuselage
+%% Fuselage
 Sf = inputs(23);
 Lt = inputs(24);
 L_D = inputs(25);
-deltaP = inputs(26);
+deltaP = inputs(26); % ---- maybe have this be in the configuration vector
+Vpr = inputs(38);
 
 if deltaP == 0 % fuselage not pressurized
     W_press = 0;
 else % fuselage pressurized
-    W_press = 11.9 + (Vpr*deltaP)^0.271;
+    W_press = 11.9*(Vpr*deltaP)^0.271;
 end
 
 if config(2) == 1 || config(2) == 3 % single fuselage or triple config
@@ -140,22 +144,23 @@ elseif config(2) == 2 % twin fuselage configuration
 end
 
 
-% Booms
+%% Booms
 Sb = inputs(27);
 L_Db = inputs(28);
+Ltb = Lt;% change this
 
 if config(2) == 3 % fuselage + two booms config
-    W_booms = 2*(0.052*Sb^1.086*(Nz*Wdg)^0.177*Ltb^-0.051*(L_Db)^-0.072*q^0.241 + W_press);
+    W_booms = 2*(0.052*Sb^1.086*(Nz*Wdg)^0.177*Ltb^-0.051*(L_Db)^-0.072*q^0.241);
 end
 
 
-% Furnishings
+%% Furnishings
 correction = W_fuse/Wdg/0.154; % correct based on fuselage weight
 
 W_furnishing = (0.0582*Wdg - 65)*correction;
 
 
-% Fuel System
+%% Fuel System
 Vt = inputs(29);
 Vi_Vt = inputs(30);
 Nt = inputs(31);
@@ -168,26 +173,26 @@ K_fs = (1-.9*(Wfl/Wdg)^.8)/Fref;
 W_fuelSys = K_fs*2.49*Vt^0.726*(1/(1 + Vi_Vt))^0.363*Nt^0.242*Nen^0.157;
 
 
-% Flight Control System
+%% Flight Control System
 Bw = inputs(33);
 L = inputs(34);
 
 W_flightCon = 0.053*L^1.536*Bw^0.371*(Nz*Wdg*10^-4)^0.8;
 
 
-% Engine
+%% Engine
 Wen = inputs(35);
 
 W_engine = 2.575*Wen^0.922*Nen;
 
 
-% Avionics
+%% Avionics
 Wuav = inputs(36);
 
 W_avionics = 2.117*Wuav^0.933;
 
 
-% Electrical System
+%% Electrical System
 
 W_elec = 12.57*(W_fuelSys + W_avionics)^0.51;
 
@@ -200,7 +205,7 @@ weights(14) = W_total;
 
 
 
-% Center of Gravity Calculation
+%% Center of Gravity Calculation
 Wx = coords(1);
 Vtx = coords(2);
 Htx = coords(3);
