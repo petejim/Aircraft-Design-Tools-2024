@@ -14,7 +14,10 @@ Aircrafts =[
 %     "T1_Baseline_Aircraft.txt";
 %         "T1_3Fuse_Simple.txt";
 %     "T1_TwinFuse_Aircraft.txt";
-    "T1_3Fuse_Pressure.txt";
+%     "T1_3Fuse_Pressure.txt";
+    "T1_3Fuse_Pressure_3view.txt";
+%     "T1_New_Baseline_Aircraft.txt"
+%     "T1_3Fuse_Pressure_Current_Climb.txt"
     ];
 
 Missions = [    
@@ -22,12 +25,16 @@ Missions = [
 %                 "T1_Climb-C.txt";
 %                 "T1_Climb-CC-C.txt";
 %                 "T1_C8000.txt";
-                "T1_CC-C25000.txt";
-
+%                 "T1_CC-C25000.txt";
+%                 "T1_CC-C27500_120KTAS.txt";
+%                 "T1_CC-C27000_Amazon.txt"
+%                 "T1_Climb-10000.txt";
+                "T1_CC-C27500_146KTAS.txt";
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
 all_results_table = cell(length(Aircrafts),length(Missions));
+all_max_powers = cell(length(Aircrafts),length(Missions));
 all_results_cases = strings(size(all_results));
 
 
@@ -36,7 +43,6 @@ for aircraft_case = 1:length(Aircrafts)
 for mission_case = 1:length(Missions)
     sector_filename = Missions(mission_case);
     all_results_cases(aircraft_case,mission_case) = aircraft_filename + " w/ " + sector_filename;
-
 %% Aircraft Configuration
 aircraft_info = readlines(aircraft_filename);
 disp("-------------------------------------------------------------------------")
@@ -56,7 +62,7 @@ service_ceiling = str2double(aircraft_info(25));
 n_engine = str2double(aircraft_info(27));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
 SeaLevelEngine(:,1) = SeaLevelEngine(:,1)*n_engine;
-SeaLevelEngine(:,1) = SeaLevelEngine(:,1)-2;
+SeaLevelEngine(:,1) = SeaLevelEngine(:,1)-2;        % Power Loss to Compressor
 
 %% Route and Weather
 % Import Flight Profile from text file
@@ -107,20 +113,20 @@ numArrays = length(dates);
 all_tailwind = cell(1, numArrays);
 all_crosswind= cell(1, numArrays);  
 
-tic
+% tic
 % for i = 1:length(dates)
 %     [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamFNoPy(control_points_longlat, point_dist, dates(i));
-%     disp("Weather Data for Day " + i + " Collected")
+%     disp("Weather Data for " + dates(i) + " Collected")
 % end
 % lat_long = [latitudes',longitudes'];
+% 
+load("Dec1-Dec10_tailwind.mat")
+load("Dec1-Dec10_crosswind.mat")
+disp("Weather from Dec 1 - Dec 10")
 
-% load("Dec1-Dec10_tailwind.mat")
-% load("Dec1-Dec10_crosswind.mat")
-% disp("Weather from Dec 1 - Dec 10")
-
-load("Zero_Tailwind.mat")
-load("Zero_Crosswind.mat")
-disp("No Wind Assumed")
+% load("Zero_Tailwind.mat")
+% load("Zero_Crosswind.mat")
+% disp("No Wind Assumed")
 
 load("SouthHem_Team1_100NM_distance.mat")
 
@@ -194,13 +200,24 @@ AS_table = array2table(AS, 'VariableNames', column_labels);
 groundspeedAVG = mean(AS(2782:end,6));
 LD = AS(:,9)./AS(:,10);
 
+
+max_shaft_power_available = nan(length(AS),2);      %   [altitude (ft), max_shaft_power (hp)] shaft_power is before propeller efficiency
+max_shaft_power_available(:,1) = AS(:,4);
+for i = 1:length(AS)
+    altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(i,4), service_ceiling, n));
+    max_shaft_power_available(i,2) = altitude_max(1,1);
+end
+all_max_powers{aircraft_case, mission_case} = max_shaft_power_available;
+
+
+
 %% plotting
 
-% figure
-% plot(AS(:,2),AS(:,4))
-% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Altitude'})
-% xlabel('dist (nmi)')
-% ylabel('alt (ft)')
+figure
+plot(AS(:,2),AS(:,4))
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Altitude'})
+xlabel('dist (nmi)')
+ylabel('alt (ft)')
 
 % figure
 % plot(AS(:,2),AS(:,3))
@@ -213,7 +230,17 @@ LD = AS(:,9)./AS(:,10);
 % title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power'})
 % xlabel('dist (nmi)')
 % ylabel('power (hp)')
-% ylim([0,300])
+% ylim([0,250])
+
+figure
+plot(AS(:,7),AS(:,4),"r")
+hold on
+plot(max_shaft_power_available(:,2),max_shaft_power_available(:,1),"b--", LineWidth=1.25)
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power Required & Available'})
+xlabel('Shaft Power, [HP]')
+ylabel('Altitude, [ft]')
+xlim([0,350])   
+ylim([10000,27500])
 % % 
 % figure
 % hold on
@@ -226,12 +253,12 @@ LD = AS(:,9)./AS(:,10);
 % ylabel('Speed (knots)')
 % xlim([0,AS(end,2)])
 
-figure
-plot(AS(:,2),LD)
-title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
-xlabel("Distance [NM]")
-ylabel("L/D")
-ylim([17.5 35])
+% figure
+% plot(AS(:,2),LD)
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
+% xlabel("Distance [NM]")
+% ylabel("L/D")
+% ylim([17.5 35])
 
 % figure
 % plot(AS(:,2),AS(:,3))
@@ -308,11 +335,11 @@ end
 % Make a Zero Wind Matrix
 
 % Iterate through each cell element in the copied cell array
-% for i = 1:numel(all_tailwind)
-%     % Check if the element is a numeric array
-%     if isnumeric(all_tailwind{i})
-%         % Replace all the values with zeros
-%         all_tailwind{i}(:) = 0;
-%         all_crosswind{i}(:) = 0;
-%     end
-% end
+for i = 1:numel(all_tailwind)
+    % Check if the element is a numeric array
+    if isnumeric(all_tailwind{i})
+        % Replace all the values with zeros
+        all_tailwind{i}(:) = 0;
+        all_crosswind{i}(:) = 0;
+    end
+end

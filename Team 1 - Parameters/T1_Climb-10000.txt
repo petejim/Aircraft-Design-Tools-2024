@@ -24,5 +24,4 @@ Control Points:
 -21.45, -48.24
 FlightType	Altitude1	Altitude2	TAS	VertSpeed	Distance	timestep	Optimal_Cl
 1, 2000,   2500,  75,  -,   -,     1,  -
-4, -,     -,     112, -,   8000,   60, 0
-3, -,     -,     112, -,   11900, 60, -
+2, 2500, 10000, 100, 150, -, 1, -

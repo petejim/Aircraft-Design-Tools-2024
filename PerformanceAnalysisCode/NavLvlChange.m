@@ -108,14 +108,14 @@ elseif alt1 > alt2
         rate_climb(i) = v(i) * sin(path(i)); % climb rate 
 
         % Descent Power 
-        [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),n); % change 
+        [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),service_ceiling,n); % change 
         power_req_level(i) = (D(i)*v(i))/(HPconv*eta); % sea level power 
         power_req(i) = power_req_level(i) + ((rate_climb(i)*W(i))/HPconv); % required climb power
         p_avail(i) = max(AdjEngineDeck(:,1)); % max available shaft power
         if power_req(i) > p_avail(i)
             warning('Required Power Exceeds Available Power')
         end
-        percent_power(i) = power_req(i)/p_avail*100; 
+        percent_power(i) = power_req(i)/p_avail(i)*100; 
         sfc(i) = AdjEngineDeck(round(percent_power(i)),2);
 
         % Current State

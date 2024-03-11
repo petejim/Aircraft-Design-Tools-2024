@@ -106,7 +106,7 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
 
     dateIndex = dateIndex + 5;
 
-    for j = 1:4
+    for j = 1:6     %% MAKE SURE this length is equal to the number of altitudes you want
 
         for i = 1:length(distance)
     

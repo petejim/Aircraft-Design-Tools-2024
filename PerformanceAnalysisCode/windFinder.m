@@ -41,23 +41,29 @@ distance_difference = distance - distance_current;
 pressure_altitude = [  850;
                         700;
                         600;
-                        500; ];
+                        500;
+                        400;
+                        300;
+                        ];
 
 % Determine the altitude to look at winds
+levels = 1:length(pressure_altitude);
 interpolate_alt = true;
-if altitude_hectoPascal >= pressure_altitude(1)
-    wind_level = 1;
-    interpolate_alt = false;
-elseif altitude_hectoPascal >= pressure_altitude(2)
-    wind_level = 2;
-elseif altitude_hectoPascal >= pressure_altitude(3)
-    wind_level = 3;
-elseif altitude_hectoPascal >= pressure_altitude(4)
-    wind_level = 4;
-else
-    wind_level = 4;
-    interpolate_alt = false;
-    warning("Pressure Altitude above 500 hPa")
+
+for i = 1:length(pressure_altitude)
+    if altitude_hectoPascal >= pressure_altitude(1)
+        wind_level = 1;
+        interpolate_alt = false;
+        break
+    elseif altitude_hectoPascal <= pressure_altitude(end)
+        wind_level = length(levels);
+        interpolate_alt = false;
+        warning("Pressure Altitude above 300 hPa")
+        break
+    elseif altitude_hectoPascal >= pressure_altitude(i)
+        wind_level = levels(i);
+        break
+    end
 end
 
 %% Wind Determination
@@ -76,6 +82,20 @@ end
 % Convert Tailwind from m/s to ft/s
 tailwind_knots = tailwind_ms * 1.94384449;     % [knots]
 
+% if altitude_hectoPascal >= pressure_altitude(1)
+%     wind_level = 1;
+%     interpolate_alt = false;
+% elseif altitude_hectoPascal >= pressure_altitude(2)
+%     wind_level = 2;
+% elseif altitude_hectoPascal >= pressure_altitude(3)
+%     wind_level = 3;
+% elseif altitude_hectoPascal >= pressure_altitude(4)
+%     wind_level = 4;
+% else
+%     wind_level = 4;
+%     interpolate_alt = false;
+%     warning("Pressure Altitude above 500 hPa")
+% end
 
 
 

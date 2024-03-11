@@ -51,7 +51,8 @@ while alt < alt2
     [AdjEngineDeck] = ChangeEngineAlt(EngineType,SeaLevelEngine,MinSFC,alt(i),service_ceiling,n);
     max_power_avail(i) = AdjEngineDeck(end,1);          % [hp]
     max_power_avail_lbf(i) = max_power_avail(i)*550;    % [lbf * ft/s]
-    shaft_power_hp(i) = max_power_avail(i)*eta;
+    power_output_hp(i) = max_power_avail(i)*eta;
+    power_output_lbf(i) = power_output_hp(i) * 550;        % [lbf * ft/s]
     sfc(i) = AdjEngineDeck(end,2);
 
     % Current State
@@ -62,7 +63,8 @@ while alt < alt2
     x(i+1) = x_dot(i)*delta_time + x(i);
     W(i+1) = W_dot*delta_time + W(i);
     time(i+1) = time(i) + delta_time;
-    path(i+1) = asind( ((max_power_avail_lbf(i)*eta)/(v(i)*W(i)))- (D(i)/W(i)) );
+    
+    path(i+1) = asind( ((power_output_lbf(i))/(v(i)*W(i)))- (D(i)/W(i)) );
     alt(i+1) = alt(i) + x_dot(i)*sind(path(i))*delta_time;
 
     % Atmosphere at updated altitude
@@ -80,7 +82,7 @@ v = v/knots2ftps; % convert velocity vector back to knots
 x = x/mile2ft; % convert feet to nautical miles
 x_dot(length(x_dot)+1) = x_dot(length(x_dot));
 time = 1:(length(alt)*delta_time);
-P = shaft_power_hp;
+P = max_power_avail;
 P(length(P)+1) = P(length(P));
 sfc(length(sfc)+1) = sfc(length(sfc));
 end

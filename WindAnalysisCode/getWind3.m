@@ -17,10 +17,12 @@ function [tail,cross,wind_valueU, wind_valueV] = getWind3(x,y,unitx,unity,alt,da
     global speedU
     global speedV
 
-    altitudes = [850,700,600,500];
+    altitudes = [850,700,600,500,400,300];
     
     hPa = altitudes(alt);
-    
+%     if altitudes(alt) == 400
+%         disp("please")
+%     end
     %get 2-D slice with date and alt
     nearest_latitudes = findTwoNearestIndices(WindY, y);
     nearest_longitudes = findTwoNearestIndices(WindX, x);
