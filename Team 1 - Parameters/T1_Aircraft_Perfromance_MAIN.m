@@ -205,10 +205,9 @@ LD = AS(:,9)./AS(:,10);
 
 max_shaft_power_available = nan(length(AS),2);      %   [altitude (ft), max_shaft_power (hp)] shaft_power is before propeller efficiency
 altitudes = AS(:,4);
-max_shaft_power_available(:,1) = altitudes;
 for sector_num = 1:length(AS)
     altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(sector_num,4), service_ceiling, n));
-    max_shaft_power_available(sector_num,2) = altitude_max(1,1);
+    max_shaft_power_available(sector_num,1) = altitude_max(1,1);
 end
 all_max_powers{aircraft_case, mission_case} = max_shaft_power_available;
 
@@ -252,10 +251,9 @@ ylabel('alt (ft)')
 figure("Name","Percent Power")
 hold on
 title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Percent Power during Flight'})
-plot(distance_traveled_nm, percent_power)
-ylim([0.5 1])
+plot(distance_traveled_nm, percent_power, "r")
+ylim([0.5 1.1])
 grid on
-legend("bruh", "huh")
 
 % % 
 % figure
