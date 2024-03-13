@@ -8,7 +8,7 @@ clc; close all; clear;
 % > Weather: Wing vectors along route
 % > Flight profile
 
-addpath(genpath("..\"))
+addpath(genpath("../"))
 
 %% Aircraft Configuration
 aircraft_filename = "Aircraft Info.txt";

@@ -8,7 +8,7 @@ clc; close all; clear;
 % > Weather: Wing vectors along route
 % > Flight profile
 
-addpath(genpath("..\"))
+addpath(genpath("../"))
 
 Aircrafts =[    
 %     "T1_Baseline_Aircraft.txt";
@@ -31,7 +31,8 @@ Missions = [
 %                 "T1_CC-C27000_Amazon.txt"
 %                 "T1_Climb-10000.txt";
 %                 "T1_CC-C27500_146KTAS.txt";
-                "T2_CC-C27500_120KTAS.txt";
+%                 "T2_CC-C11000_120KTAS.txt";
+                "T2_CC-C25000_120KTAS.txt"
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -203,17 +204,19 @@ LD = AS(:,9)./AS(:,10);
 
 
 max_shaft_power_available = nan(length(AS),2);      %   [altitude (ft), max_shaft_power (hp)] shaft_power is before propeller efficiency
-max_shaft_power_available(:,1) = AS(:,4);
+altitudes = AS(:,4);
+max_shaft_power_available(:,1) = altitudes;
 for sector_num = 1:length(AS)
     altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(sector_num,4), service_ceiling, n));
     max_shaft_power_available(sector_num,2) = altitude_max(1,1);
 end
 all_max_powers{aircraft_case, mission_case} = max_shaft_power_available;
 
-percent_power = AS(:,7)./max_shaft_power_available;
+power_output = AS(:,7);
+percent_power = power_output./max_shaft_power_available;
 
 distance_traveled_nm = AS(:,2);
-altitudes = AS(:,4);
+
 
 %% plotting
 
@@ -236,15 +239,15 @@ ylabel('alt (ft)')
 % ylabel('power (hp)')
 % ylim([0,250])
 
-figure
-plot(AS(:,7), altitudes,"r")
-hold on
-plot(max_shaft_power_available(:,2),max_shaft_power_available(:,1),"b--", LineWidth=1.25)
-title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power Required & Available'})
-xlabel('Shaft Power, [HP]')
-ylabel('Altitude, [ft]')
-xlim([0,350])   
-ylim([8000, max(altitudes)])
+% figure
+% plot(AS(:,7), altitudes,"r")
+% hold on
+% plot(max_shaft_power_available(:,2),max_shaft_power_available(:,1),"b--", LineWidth=1.25)
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power Required & Available'})
+% xlabel('Shaft Power, [HP]')
+% ylabel('Altitude, [ft]')
+% xlim([0,350])   
+% ylim([8000, max(altitudes)])
 
 figure("Name","Percent Power")
 hold on
@@ -252,7 +255,7 @@ title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Perce
 plot(distance_traveled_nm, percent_power)
 ylim([0.5 1])
 grid on
-
+legend("bruh", "huh")
 
 % % 
 % figure

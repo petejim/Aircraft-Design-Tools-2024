@@ -31,7 +31,8 @@ Missions = [
 %                 "T1_CC-C27000_Amazon.txt"
 %                 "T1_Climb-10000.txt";
 %                 "T1_CC-C27500_146KTAS.txt";
-                "T2_CC-C27500_120KTAS.txt";
+%                 "T2_CC-C11000_120KTAS.txt";
+                "T2_CC-C25000_120KTAS.txt"
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -50,11 +51,11 @@ aircraft_info = readlines(aircraft_filename);
 disp("-------------------------------------------------------------------------")
 disp("Aircraft Parameters:  " + aircraft_filename)
 Wto = str2double(aircraft_info(3)); % Takeoff Weight
-AP = [str2double(aircraft_info(9)),str2double(aircraft_info(11)),str2double(aircraft_info(13))]; % AP = [wing area (ft^2),AR, Eta]
+
 k = str2double(aircraft_info(5)); % Induced Drag Constant
 CD0 = str2double(aircraft_info(7)); % Parasitic Drag
 Wf = str2double(aircraft_info(31)); % Fuel Weight [lbf]
-
+AP = [str2double(aircraft_info(9)),str2double(aircraft_info(11)),str2double(aircraft_info(13)), k, CD0]; % AP = [wing area (ft^2),AR, Eta, k, CD0]
 %% Engine Selection
 MinSFC = str2double(aircraft_info(17)); 
 MaxBHP = str2double(aircraft_info(19));
@@ -65,6 +66,15 @@ n_engine = str2double(aircraft_info(27));
 [SeaLevelEngine] = BuildEngineDeck(EngineType, MinSFC, MaxBHP, n);
 SeaLevelEngine(:,1) = SeaLevelEngine(:,1)*n_engine;
 SeaLevelEngine(:,1) = SeaLevelEngine(:,1)-2;        % Power Loss to Compressor
+
+engine_info = struct;
+engine_info.min_SFC = MinSFC;
+engine_info.max_BHP = MaxBHP;
+engine_info.engine_type = EngineType;
+engine_info.resolution = n;
+engine_info.service_ceiling = service_ceiling;
+engine_info.num_engines = n_engine;
+engine_info.sea_level_engine = SeaLevelEngine;
 
 %% Route and Weather
 % Import Flight Profile from text file
@@ -77,16 +87,16 @@ alt_airport = str2double(route(6));
 dates = route(8:17);
 control_point_cells = cellfun(@(x) split(x, ','), route(19:19+n_control-1,1), 'UniformOutput', false);
 control_points_latlong = nan(n_control,2);
-for i = 1:length(control_point_cells)
+for sector_num = 1:length(control_point_cells)
     for j = 1:2
-        control_points_latlong(i,j) = str2double(control_point_cells{i}{j});
+        control_points_latlong(sector_num,j) = str2double(control_point_cells{sector_num}{j});
     end
 end
 sectors_cells = cellfun(@(x) split(x, ','), route(19+n_control+1:end,1), 'UniformOutput', false);
 sectors = nan(length(sectors_cells));
-for i = 1:length(sectors_cells)
+for sector_num = 1:length(sectors_cells)
     for j = 1:8
-        sectors(i,j) = str2double(sectors_cells{i}{j});
+        sectors(sector_num,j) = str2double(sectors_cells{sector_num}{j});
     end
 end
 
@@ -115,22 +125,28 @@ numArrays = length(dates);
 all_tailwind = cell(1, numArrays);
 all_crosswind= cell(1, numArrays);  
 
-% tic
+tic
 % for i = 1:length(dates)
 %     [all_tailwind{i},all_crosswind{i},u,v,distance,point_distance,latitudes,longitudes,unitx,unity] = profileTeamFNoPy(control_points_longlat, point_dist, dates(i));
 %     disp("Weather Data for " + dates(i) + " Collected")
 % end
 % lat_long = [latitudes',longitudes'];
+
+load("T2_Dec1-Dec10_all_tailwind.mat")
+load("T2_Dec1-Dec10_all_crosswind.mat")
+disp("Weather from Dec 1 - Dec 10 on T2 Southern Westerlies Route")
+load("T2_Southern_Westerlies_Distances_100NM.mat")
+
 % 
-load("Dec1-Dec10_tailwind.mat")
-load("Dec1-Dec10_crosswind.mat")
-disp("Weather from Dec 1 - Dec 10")
+% load("Dec1-Dec10_tailwind.mat")
+% load("Dec1-Dec10_crosswind.mat")
+% disp("Weather from Dec 1 - Dec 10 on T1 Southern Westerlies Route")
+% load("SouthHem_Team1_100NM_distance.mat")
 
 % load("Zero_Tailwind.mat")
 % load("Zero_Crosswind.mat")
 % disp("No Wind Assumed")
-
-load("SouthHem_Team1_100NM_distance.mat")
+% load("SouthHem_Team1_100NM_distance.mat")
 
 weather_matrix_creation_time = toc;
 
@@ -143,52 +159,36 @@ sizeSEC = size(sectors);
 
 disp(" ")
 tic
-for i = 1:sizeSEC(1)
+for sector_num = 1:sizeSEC(1)
 % Flight Sector Analysis
     % 1: Full Throttle Climb
-    if sectors(i,1) == 1
+    if sectors(sector_num,1) == 1
         disp("Start of Full Throttle Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,alt,P,v,x_dot,sfc,CL,CD] = best_climb_v2(AS(j,3),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
-        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(i)*ones(length(time),1)];
+        [time,x,W,alt,P,v,x_dot,sfc,CL,CD] = best_climb_v2(AS(j,3),sectors(sector_num,2),sectors(sector_num,3),AP(3),0,sectors(sector_num,7),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
+        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(sector_num)*ones(length(time),1)];
         AS = [AS;newAS];
     % 2: Level Change Climb/Descent
-    elseif sectors(i,1) == 2
+    elseif sectors(sector_num,1) == 2
         disp("Start of Constant Rate Climb:         " + size(AS,1) + " iteration")
         sizeAS = size(AS);
         j = sizeAS(1);
-        [time,x,W,P,alt,v,x_dot,sfc,CL,CD] = NavLvlChange(AS(j,3),sectors(i,4),sectors(i,2),sectors(i,3),AP(3),0,sectors(i,7),sectors(i,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
-        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(i)*ones(length(time),1)];
+        [time,x,W,P,alt,v,x_dot,sfc,CL,CD] = NavLvlChange(AS(j,3),sectors(sector_num,4),sectors(sector_num,2),sectors(sector_num,3),AP(3),0,sectors(sector_num,7),sectors(sector_num,5),EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,AP(1),k,CD0);
+        newAS = [max(AS(:,1))+time',max(AS(:,2))+x',W',alt',v',x_dot',P',sfc',CL',CD',sectors(sector_num)*ones(length(time),1)];
         AS = [AS;newAS];
     % 3: Cruise, constant alt, constant TAS
-    elseif sectors(i,1) == 3
+    elseif sectors(sector_num,1) == 3
         cruise_start = size(AS,1);
         disp("Start of Const Alt. & Vel Cruise:     " + size(AS,1) + " iteration")
         disp("      Cruise Altitude: " + AS(end,4) + " ft")
-        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(i,6),sectors(i,4),sectors(i,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,CD0);
+        [AS] = cruise_cnst_v_h_final(AS,AP,sectors(sector_num,6),sectors(sector_num,4),sectors(sector_num,7),all_tailwind,distance,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,k,CD0);
         cruise_end = size(AS,1);
     % 4: Cruise, constant Cl, constant TAS
-    elseif sectors(i,1) == 4
+    elseif sectors(sector_num,1) == 4
         cruiseClimb_start = size(AS,1);
         disp("Start of Cruise Climb:                " + size(AS,1) + " iteration")
-        CL = sectors(i,8);
-        if CL == 0
-% AS [ time(sec), distance(nm), weight(lbf), altitude(ft), airspeed(knots), ground speed(knots), power(hp), sfc, CL, CD, mode_#]
-            altitude = AS(end,4);   % [ft]
-            weight = AS(end,3);     % [lbf]
-            S = AP(1);              % [ft^2]
-            velocity = sectors(i,4) * 1.6878098571;   % [ft/s]
-            density = stdAtmosphere_imperial(altitude,0);   % [slugs/ft^3]
-            CL = 2 * weight / (density * velocity^2 * S);
-        elseif CL == 1
-            CL = sqrt(CD0/k);
-            disp("      Max L/D CL calculated to be: " + CL)
-        else
-            disp("Input 0 CL for automatic CL determination or 1 for max L/D CL")
-        end
-        CD = CD0 + k*(CL^2);
-        [AS] = cruise_cnst_CL_v2(sectors(i,7), AP, AS,EngineType,SeaLevelEngine,MinSFC,service_ceiling,n,all_tailwind,distance,sectors(i,4),sectors(i,6),CL,CD);
+        [AS] = cruise_climb(sectors, sector_num, AP, AS, engine_info, all_tailwind, distance);
         cruiseClimb_end = size(AS,1);
     else
         error('Input Valid Sector Type (1-4)')
@@ -204,13 +204,17 @@ LD = AS(:,9)./AS(:,10);
 
 
 max_shaft_power_available = nan(length(AS),2);      %   [altitude (ft), max_shaft_power (hp)] shaft_power is before propeller efficiency
-max_shaft_power_available(:,1) = AS(:,4);
-for i = 1:length(AS)
-    altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(i,4), service_ceiling, n));
-    max_shaft_power_available(i,2) = altitude_max(1,1);
+altitudes = AS(:,4);
+max_shaft_power_available(:,1) = altitudes;
+for sector_num = 1:length(AS)
+    altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(sector_num,4), service_ceiling, n));
+    max_shaft_power_available(sector_num,2) = altitude_max(1,1);
 end
 all_max_powers{aircraft_case, mission_case} = max_shaft_power_available;
 
+percent_power = AS(:,7)./max_shaft_power_available;
+
+distance_traveled_nm = AS(:,2);
 
 
 %% plotting
@@ -234,19 +238,24 @@ ylabel('alt (ft)')
 % ylabel('power (hp)')
 % ylim([0,250])
 
-figure
-plot(AS(:,7),AS(:,4),"r")
-hold on
-plot(max_shaft_power_available(:,2),max_shaft_power_available(:,1),"b--", LineWidth=1.25)
-title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power Required & Available'})
-xlabel('Shaft Power, [HP]')
-ylabel('Altitude, [ft]')
-xlim([0,350])   
-ylim([10000,27500])
+% figure
+% plot(AS(:,7), altitudes,"r")
+% hold on
+% plot(max_shaft_power_available(:,2),max_shaft_power_available(:,1),"b--", LineWidth=1.25)
+% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Power Required & Available'})
+% xlabel('Shaft Power, [HP]')
+% ylabel('Altitude, [ft]')
+% xlim([0,350])   
+% ylim([8000, max(altitudes)])
 
-figure("Name","Percent Throttle")
+figure("Name","Percent Power")
 hold on
-plot()
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Percent Power during Flight'})
+plot(distance_traveled_nm, percent_power)
+ylim([0.5 1])
+grid on
+legend("bruh", "huh")
+
 % % 
 % figure
 % hold on
@@ -259,12 +268,12 @@ plot()
 % ylabel('Speed (knots)')
 % xlim([0,AS(end,2)])
 
-% figure
-% plot(AS(:,2),LD)
-% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
-% xlabel("Distance [NM]")
-% ylabel("L/D")
-% ylim([17.5 35])
+figure
+plot(AS(:,2),LD)
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
+xlabel("Distance [NM]")
+ylabel("L/D")
+ylim([17.5 35])
 
 % figure
 % plot(AS(:,2),AS(:,3))
@@ -341,11 +350,11 @@ end
 % Make a Zero Wind Matrix
 
 % Iterate through each cell element in the copied cell array
-for i = 1:numel(all_tailwind)
-    % Check if the element is a numeric array
-    if isnumeric(all_tailwind{i})
-        % Replace all the values with zeros
-        all_tailwind{i}(:) = 0;
-        all_crosswind{i}(:) = 0;
-    end
-end
+% for sector_num = 1:numel(all_tailwind)
+%     % Check if the element is a numeric array
+%     if isnumeric(all_tailwind{sector_num})
+%         % Replace all the values with zeros
+%         all_tailwind{sector_num}(:) = 0;
+%         all_crosswind{sector_num}(:) = 0;
+%     end
+% end
