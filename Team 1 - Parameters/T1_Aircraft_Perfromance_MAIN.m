@@ -18,7 +18,15 @@ Aircrafts =[
 %     "T1_3Fuse_Pressure_3view.txt";
 %     "T1_New_Baseline_Aircraft.txt"
 %     "T1_3Fuse_Pressure_Current_Climb.txt"
-    "T2_DR4_Configuration.txt";
+%     "T2_DR4_Configuration.txt";
+%     "T2_DR4_Pres_Config.txt"
+%     "T2_DR4_2EngineConfig.txt"
+%     "T2_DR4_CruiseConfig.txt"
+%     "T2_T1_DR4_ClimbConfiguration.txt"
+%     "T2_T1_DR4_CruiseConfiguration.txt"
+%     "T2_DR4_Big_Pres_Config_CLimb.txt"
+%     "T2_DR4_Big_Pres_Config.txt"
+    "Danilo_Config.txt"
     ];
 
 Missions = [    
@@ -31,8 +39,17 @@ Missions = [
 %                 "T1_CC-C27000_Amazon.txt"
 %                 "T1_Climb-10000.txt";
 %                 "T1_CC-C27500_146KTAS.txt";
-%                 "T2_CC-C11000_120KTAS.txt";
-                "T2_CC-C25000_120KTAS.txt"
+%                 "T2_C10000_120KTAS.txt";
+%                 "T2_CC-C11000_102KTAS.txt";
+%                 "T2_CC-C25000_120KTAS.txt"
+%                 "T2_CC10,000-C20,000_106.5KTAS.txt"
+%                 "T2_Climb2000-10,000.txt"
+%                 "T2_Climb300-11,000.txt"
+%                 "T2_C11000_102KTAS.txt"
+%                 "T2_BestClimb2000_20,000.txt"
+%                 "T2_2000BestClimb10,000CC15,000.txt"
+%                 "T2_CC-C20000_120KTAS.txt"
+                "Danilo_Mission.txt"
                 ];
 
 all_results = cell(length(Aircrafts),length(Missions));
@@ -199,9 +216,8 @@ flight_mode_runtime = toc;
 % Create a readable table for the output matrix AS
 column_labels = {'Time [sec]','Distance [NM]', 'Weight [lbf]', 'Altitude [ft]', 'Airspeed [knots]', 'Ground Speed [knots]', 'Power [hp]', 'SFC', 'CL', 'CD', 'Mode #'};
 AS_table = array2table(AS, 'VariableNames', column_labels);
-groundspeedAVG = mean(AS(2782:end,6));
-LD = AS(:,9)./AS(:,10);
-
+groundspeedAVG = mean(AS(1:end,6));
+LD = AS(:,9)./AS(:,10);     % CL/CD during flight
 
 max_shaft_power_available = nan(length(AS),2);      %   [altitude (ft), max_shaft_power (hp)] shaft_power is before propeller efficiency
 altitudes = AS(:,4);
@@ -209,9 +225,10 @@ for sector_num = 1:length(AS)
     altitude_max = max(ChangeEngineAlt(EngineType, SeaLevelEngine, MinSFC, AS(sector_num,4), service_ceiling, n));
     max_shaft_power_available(sector_num,1) = altitude_max(1,1);
 end
+
 all_max_powers{aircraft_case, mission_case} = max_shaft_power_available;
 
-power_output = AS(:,7);
+power_output = AS(:,7);     % Shaft Power [hp]
 percent_power = power_output./max_shaft_power_available;
 
 distance_traveled_nm = AS(:,2);
@@ -252,23 +269,25 @@ figure("Name","Percent Power")
 hold on
 title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'Percent Power during Flight'})
 plot(distance_traveled_nm, percent_power, "r")
-ylim([0.5 1.1])
+ylim([0.4 1.1])
+xlim([0 distance_traveled_nm(end)])
 grid on
 
+
 % % 
-% figure
-% hold on
-% title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case; "Constant Altitude & Airspeed Cruise"})
-% plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,5),LineWidth=1.5)
-% plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
-% yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
-% yl1.Color = [0.722 0.027 0.027];
-% xlabel('Distance (nautical miles)')
-% ylabel('Speed (knots)')
-% xlim([0,AS(end,2)])
+figure
+hold on
+title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case; "Constant Altitude & Airspeed Cruise"})
+plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,5),LineWidth=1.5)
+plot(AS(cruise_start:cruise_end,2), AS(cruise_start:cruise_end,6),LineWidth=1.1, Color=[0.722 0.027 0.027])
+yl1 = yline(groundspeedAVG,"--",LineWidth=1.2);
+yl1.Color = [0.722 0.027 0.027];
+xlabel('Distance (nautical miles)')
+ylabel('Speed (knots)')
+xlim([0,AS(end,2)])
 
 figure
-plot(AS(:,2),LD)
+plot(distance_traveled_nm,LD)
 title({"Aircraft Case:" + aircraft_case + " Mission Case:" + mission_case;'L/D'})
 xlabel("Distance [NM]")
 ylabel("L/D")
