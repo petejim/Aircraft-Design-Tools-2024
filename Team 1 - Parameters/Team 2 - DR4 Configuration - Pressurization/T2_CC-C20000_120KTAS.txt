@@ -1,0 +1,29 @@
+Distance Between Path points (nmi):
+100
+Number of control points:
+8
+Airport Altitude:
+2000
+Input 10 consecutive days that you would lke to fly in (xx-Jan-xxxx) format:
+01-Dec-2023
+02-Dec-2023
+03-Dec-2023
+04-Dec-2023
+05-Dec-2023
+06-Dec-2023
+07-Dec-2023
+08-Dec-2023
+09-Dec-2023
+10-Dec-2023
+Control Points:
+-21.45, -48.24
+-26.2225, 28.0092
+-31.9986, 115.5203 
+-34.46389, 172.8703
+-30.000, -149.0000
+-27.161, -109.4308
+-58.6833, -64.933 
+-21.45, -48.24
+FlightType	Altitude1	Altitude2	TAS	VertSpeed	Distance	timestep	Optimal_Cl
+4, -,     -,     102, -,   15000,   60, 0
+3, -,     -,     102, -,   2250, 60, -

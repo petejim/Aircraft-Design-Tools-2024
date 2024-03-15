@@ -1,0 +1,111 @@
+Distance Between Path points (nmi):
+100
+Number of control points:
+8
+Airport Altitude:
+2000
+Input 10 consecutive days that you would lke to fly in (xx-Jan-xxxx) format:
+01-Dec-2023
+02-Dec-2023
+03-Dec-2023
+04-Dec-2023
+05-Dec-2023
+06-Dec-2023
+07-Dec-2023
+08-Dec-2023
+09-Dec-2023
+10-Dec-2023
+Control Points:
+-21.45, -48.24
+-26.2225, 28.0092
+-31.9986, 115.5203 
+-34.46389, 172.8703
+-30.000, -149.0000
+-27.161, -109.4308
+-58.6833, -64.933 
+-21.45, -48.24
+FlightType  Altitude1   Altitude2   TAS VertSpeed   Distance    timestep    CL (0 for possible, 1 for best)
+1, 2000, 10000, -, -, -, 1, -
+4, -, -, 130, -, 3000, 60, 0
+
+-------------------------------------------------------------------------
+Aircraft Parameters:  T2_DR4_Big_Pres_Config_CLimb.txt
+Mission Parameters:   T2_2000BestClimb10,000CC15,000.txt
+ 
+Weather from Dec 1 - Dec 10 on T2 Southern Westerlies Route
+ 
+Start of Full Throttle Climb:         1 iteration
+Start of Cruise Climb:                1108 iteration
+      Change of 0.00010936 ft in altitude in the first iteration
+ 
+-----------Results------------
+Flew 3031.0471 NM
+Average Groundspeed: 138.99 knots
+Fuel Consumed: 1148.798 lbf | Fuel Left: 4132.202lbf
+Mission Duration: 1308.45 minutes or 21.8075 hours or 0.90865 days
+SFC
+L/D
+>> altitudes(end)
+
+ans =
+
+   1.4176e+04
+
+
+-------------------------------------------------------------------------
+
+Distance Between Path points (nmi):
+100
+Number of control points:
+8
+Airport Altitude:
+2000
+Input 10 consecutive days that you would lke to fly in (xx-Jan-xxxx) format:
+01-Dec-2023
+02-Dec-2023
+03-Dec-2023
+04-Dec-2023
+05-Dec-2023
+06-Dec-2023
+07-Dec-2023
+08-Dec-2023
+09-Dec-2023
+10-Dec-2023
+Control Points:
+-21.45, -48.24
+-26.2225, 28.0092
+-31.9986, 115.5203 
+-34.46389, 172.8703
+-30.000, -149.0000
+-27.161, -109.4308
+-58.6833, -64.933 
+-21.45, -48.24
+FlightType  Altitude1   Altitude2   TAS VertSpeed   Distance    timestep    Optimal_Cl
+4, -,     -,     102, -,   15000,   60, 0
+3, -,     -,     102, -,   2250, 60, -
+
+-------------------------------------------------------------------------
+Aircraft Parameters:  T2_DR4_Big_Pres_Config.txt
+Mission Parameters:   T2_CC-C20000_120KTAS.txt
+ 
+Weather from Dec 1 - Dec 10 on T2 Southern Westerlies Route
+ 
+Start of Cruise Climb:                1 iteration
+      Change of 0.00011744 ft in altitude in the first iteration
+Start of Const Alt. & Vel Cruise:     7924 iteration
+      Cruise Altitude: 20097.0203 ft
+ 
+-----------Results------------
+Flew 17253.3814 NM
+Average Groundspeed: 118.7506 knots
+Fuel Consumed: 4064.8229 lbf | Fuel Left: 67.1771lbf
+Mission Duration: 9082 minutes or 151.3667 hours or 6.3069 days
+SFC
+Average SFC During Cruise: 0.36445
+Average SFC During Cruise Climb: 0.35528
+L/D
+Average L/D During Cruise: 28.6577
+Average L/D During Cruise Climb: 29.2159
+
+Total Fuel Consumed: 5,213 lbf
+Total Mission Time: 173.1742 hr or 7.2 days
