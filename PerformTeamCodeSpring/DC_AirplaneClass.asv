@@ -125,9 +125,7 @@ classdef DC_AirplaneClass
         function [AoA] = getAoAfromn(obj,n)
             % given load factor n finds the required AoA
             lift = n*obj.W;
-            [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
-            CL = 2*lift/(rho*obj.S*obj.TAS^2);
-            AoA=CL/obj.dCL_dAoA+obj.alpha0;
+
         end
         function [obj] = setCRR(obj, CRR)
             obj.Crr = CRR;
@@ -135,7 +133,7 @@ classdef DC_AirplaneClass
         function [Fr] = getRollFriction(obj)
             L = obj.getLfromAoA();
             N = obj.W-L;
-            Fr = N*obj.Crr;
+            
         end
 
 
