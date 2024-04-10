@@ -95,9 +95,50 @@ classdef DC_AirplaneClass
             % zero-lift AoA
             obj.alpha0 = alpha0;
 
+            % W
+            obj.W = WTO;
+
+            % for now zero out position, velocity, acceleration, AoA, etc
+            obj.x = 0;
+            obj.y = 0;
+            obj.Vx = 0;
+            obj.Vy = 0;
+            obj.Ax = 0;
+            obj.Ay = 0;
+            obj.AoA = 0;
+            obj.Crr = 0;
+            
 
         end
-
+        % Standard getters and setters-------------------------------
+        function obj = set.Crr(obj,CRR)
+            obj.Crr = CRR;
+        end
+        function obj = set.x(obj,x)
+            obj.x=x;
+        end
+        function obj = set.y(obj,y)
+            obj.y=y;
+        end
+        function obj = set.Vx(obj,Vx)
+            obj.Vx=Vx;
+        end
+        function obj = set.Vy(obj,Vy)
+            obj.Vy=Vy;
+        end
+        function obj = set.Ax(obj,Ax)
+            obj.Ax=Ax;
+        end
+        function obj = set.Ay(obj,Ay)
+            obj.Ay=Ay;
+        end
+        function obj = set.AoA(obj,AoA)
+            obj.AoA = AoA;
+        end
+        function obj = set.deltaT(obj,deltaT)
+            obj.deltaT = deltaT;
+        end
+        % -----------------------------------------------------------
         % function [CL, CD] = getCLCD(obj, V, rho, h)
         %     % Calculate lift and drag coefficients
 
@@ -115,13 +156,22 @@ classdef DC_AirplaneClass
         %     CD = obj.CD0 + obj.k * CL^2;
 
         % end
-        function [L] = getLfromAoA(obj)
+        function [L,CL] = getL(obj)
             % for the current state AoA find the lift being generated
             % for now use zero-lift AoA, lift slope to get CL from alpha
             CL = obj.dCL_dAoA*(obj.AoA-obj.alpha0);
             [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
             L = 0.5*rho*obj.S*CL*obj.TAS^2;
         end
+
+        function [L,CL] = getLFromAoA(obj,AoA)
+            % find what lift would be at a specified AoA other than current
+            % state
+            CL = obj.dCL_dAoA*(AoA-obj.alpha0);
+            [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
+            L = 0.5*rho*obj.S*CL*obj.TAS^2;
+        end
+
         function [AoA] = getAoAfromn(obj,n)
             % given load factor n finds the required AoA
             lift = n*obj.W;
@@ -129,14 +179,20 @@ classdef DC_AirplaneClass
             CL = 2*lift/(rho*obj.S*obj.TAS^2);
             AoA=CL/obj.dCL_dAoA+obj.alpha0;
         end
-        function [obj] = setCRR(obj, CRR)
-            obj.Crr = CRR;
+
+        function [D,CD] = getDrag(obj)
+            [~,CL] = obj.getLfromAoA();
+            CD = obj.CD0+obj.k*CL^2;
+            [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
+            D = 0.5*rho*obj.S*CD*obj.TAS^2;
         end
+
         function [Fr] = getRollFriction(obj)
             L = obj.getLfromAoA();
             N = obj.W-L;
             Fr = N*obj.Crr;
         end
+
 
 
     end
