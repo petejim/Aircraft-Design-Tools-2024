@@ -49,6 +49,12 @@ classdef DC_AirplaneClass
         AoA
         % Coefficient of rolling resistance
         Crr
+        % x-component of wind [ft/s]
+        Wx
+        % y-component of wind [ft/s]
+        Wy
+        % crosswind component [ft/s]
+        Wc
         % True airspeed
         TAS
 
@@ -138,6 +144,15 @@ classdef DC_AirplaneClass
         function obj = set.deltaT(obj,deltaT)
             obj.deltaT = deltaT;
         end
+        function obj = set.Wx(obj,Wx)
+            obj.Wx = Wx;
+        end
+        function obj = set.Wy(obj,Wy)
+            obj.Wy = Wy;
+        end
+        function obj = set.Wc(obj,Wc)
+            obj.Wc = Wc;
+        end
         % -----------------------------------------------------------
         % function [CL, CD] = getCLCD(obj, V, rho, h)
         %     % Calculate lift and drag coefficients
@@ -181,19 +196,38 @@ classdef DC_AirplaneClass
         end
 
         function [D,CD] = getDrag(obj)
-            [~,CL] = obj.getLfromAoA();
+            [~,CL] = obj.getL();
             CD = obj.CD0+obj.k*CL^2;
             [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
             D = 0.5*rho*obj.S*CD*obj.TAS^2;
         end
 
         function [Fr] = getRollFriction(obj)
-            L = obj.getLfromAoA();
+            L = obj.getL();
             N = obj.W-L;
-            Fr = N*obj.Crr;
+            if N>0
+                Fr = N*obj.Crr;
+            else
+                Fr=0;
+            end
         end
 
+        function [obj] = calcTAS(obj)
+            % for now just do tailwind component
+            obj.TAS = obj.Vx-obj.Wx;
+        end
 
+        function [P_thp, T] = getPowerThrust(obj, p_pct)
+            % flesh this out with actual CD-135 engine deck and prop
+            % performance
+            % For now just constant derating and prop efficiency
+            P_shp = 2*135*p_pct;
+            P_thp = obj.eta_p*P_shp;
+            T = P_thp*550/obj.TAS;
+            if T>1500
+                T=1500;
+            end
+        end
 
     end
 

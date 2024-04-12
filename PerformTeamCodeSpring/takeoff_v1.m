@@ -23,9 +23,11 @@ plane.Crr = CRR;
 
 
 % wind conditions
-headwind = 0;
+headwind = 1;
 crosswind = 0;
-
+plane.Wx = -headwind;
+plane.Wy = 0;
+plane.Wc = crosswind;
 
 % initial conditions
 plane.x = 0;
@@ -36,8 +38,70 @@ plane.Ax = 0;
 plane.Ay = 0;
 plane.AoA = groundAlpha;
 plane.deltaT = 0;
-plane.findTAS
+plane=plane.calcTAS();
+
+
+% try some CD0s and CRRs
+CRRlist = [0.02, 0.025, 0.03, 0.035,0.04];
+CD0list = [0.016,0.02,0.025,0.03];
+for i = 1:length(CRRlist)
+    for j = 1:length(CD0list)
+        plane.Crr=CRRlist(i);
+        plane.CD0=CD0list(j);
+        [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL] = takeoff_1(plane,rotAlpha);
+        TOG(i,j) = x(length(x));
+        TOT(i,j) = t(length(t));
+    end
+end
 
 
 
 
+%% plot
+figure(1)
+contour(CD0list,CRRlist,TOG,'ShowText','on')
+xlabel('CD0')
+ylabel('CRR')
+
+figure(2)
+contour(CD0list,CRRlist,TOT,'ShowText','on')
+
+%% functions
+function [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL] = takeoff_1(plane,rotAlpha)
+tstep = 0.1;% seconds
+i = 1;
+t(i) = 0;
+[L(i),~]=plane.getL();
+[D(i),~] = plane.getDrag();
+Fr(i) = plane.getRollFriction();
+[~,T(i)] = plane.getPowerThrust(1);
+Fx(i) = T(i)-Fr(i)-D(i);
+Ax(i) = plane.Ax;
+Vx(i) = plane.Vx;
+x(i) = plane.x;
+TAS(i) = plane.TAS;
+[rotL(i),rotCL(i)] = plane.getLFromAoA(rotAlpha);
+while L(i)<plane.W
+    i = i+1;
+    [D(i),~] = plane.getDrag();
+    Fr(i) = plane.getRollFriction();
+    [~,T(i)] = plane.getPowerThrust(1);
+    Fx(i) = T(i)-Fr(i)-D(i);
+    plane.Ax = Fx(i)/(plane.W/32.17);
+    Ax(i) = plane.Ax;% Clean this up to store either in object or here, not both
+    plane.Vx = plane.Vx+plane.Ax*tstep;
+    Vx(i) = plane.Vx;
+    plane.x = plane.x+plane.Vx*tstep;
+    x(i) = plane.x;
+    plane=plane.calcTAS();
+    TAS(i) = plane.TAS;
+    [L(i),CL(i)]=plane.getL();
+
+    [rotL(i),rotCL(i)] = plane.getLFromAoA(rotAlpha);
+    if rotL(i)>plane.W
+        plane.AoA=rotAlpha;
+    end
+    t(i) = t(i-1)+tstep;
+end
+
+end
