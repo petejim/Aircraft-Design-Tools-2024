@@ -30,6 +30,12 @@ classdef DC_AirplaneClass
         % zero-lift AoA
         alpha0
 
+        % Sea level engine matrix
+        engMatSL
+
+        % critical altitude
+        crit_alt
+
         % State Variables-------------------------------------
         % current weight
         W
@@ -103,6 +109,13 @@ classdef DC_AirplaneClass
 
             % W
             obj.W = WTO;
+
+            % load engine matrix SL
+            engMatSL_table = load("CD135_SL.mat");
+            engMatSL = table2array(engMatSL_table);
+
+            % critical alt
+            crit_alt = 6000;
 
             % for now zero out position, velocity, acceleration, AoA, etc
             obj.x = 0;
@@ -228,6 +241,18 @@ classdef DC_AirplaneClass
                 T=1500;
             end
         end
+
+        function [P_shp, P_thp, SFC, FF, T] = engine_prop(obj, p_pct)
+            [rho,~,~] = stdAtmosphere_imperial(obj.y,obj.deltaT);
+            [rho_crit,~,~] = stdAtmosphere_imperial(obj.crit_alt,0);
+            if rho>rho_crit
+                % below critical altitude
+                P_shp = obj.engMatSL(length(obj.engMatSL),1)*p_pct;
+            end
+            
+
+        end
+
 
     end
 

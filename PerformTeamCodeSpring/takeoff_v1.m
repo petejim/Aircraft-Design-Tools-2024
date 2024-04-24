@@ -9,8 +9,8 @@ CD0 = 0.016;
 k = 0.0147;
 eta_p = 0.8;
 dCL_dAoA = 5;%make this less horseshit someday
-alpha0 = 0;%same
-groundAlpha = deg2rad(2);% set this to actual value
+alpha0 = -deg2rad(4);%same
+groundAlpha = deg2rad(0);% set this to actual value
 rotAlpha = deg2rad(10);% set this to actual value
 
 % construct airplane
@@ -44,6 +44,7 @@ plane=plane.calcTAS();
 % try some CD0s and CRRs
 CRRlist = [0.02, 0.025, 0.03, 0.035,0.04];
 CD0list = [0.016,0.02,0.025,0.03];
+fn = 1;
 for i = 1:length(CRRlist)
     for j = 1:length(CD0list)
         plane.Crr=CRRlist(i);
@@ -51,6 +52,16 @@ for i = 1:length(CRRlist)
         [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL] = takeoff_1(plane,rotAlpha);
         TOG(i,j) = x(length(x));
         TOT(i,j) = t(length(t));
+        figure(fn)
+        plot(t,T)
+        hold on
+        plot(t,D)
+        plot(t,Fr)
+        ttltxt = "CD0 = "+num2str(CD0list(j))+" Crr = " + num2str(CRRlist(i));
+        title(ttltxt)
+        xlabel('time')
+        legend('Thrust','Drag','rolling resistance')
+        fn = fn+1;
     end
 end
 
@@ -58,12 +69,13 @@ end
 
 
 %% plot
-figure(1)
+fn = fn+1;
+figure(fn)
 contour(CD0list,CRRlist,TOG,'ShowText','on')
 xlabel('CD0')
 ylabel('CRR')
-
-figure(2)
+fn = fn+1;
+figure(fn)
 contour(CD0list,CRRlist,TOT,'ShowText','on')
 
 %% functions
@@ -96,7 +108,6 @@ while L(i)<plane.W
     plane=plane.calcTAS();
     TAS(i) = plane.TAS;
     [L(i),CL(i)]=plane.getL();
-
     [rotL(i),rotCL(i)] = plane.getLFromAoA(rotAlpha);
     if rotL(i)>plane.W
         plane.AoA=rotAlpha;
