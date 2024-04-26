@@ -63,7 +63,10 @@ classdef DC_AirplaneClass
         Wc
         % True airspeed
         TAS
-
+        % prop efficiency envelope
+        etaP_envelope
+        % prop diameter [ft]
+        D_prop
         % Standard atmosphere temperature offset
         deltaT
     end
@@ -112,7 +115,14 @@ classdef DC_AirplaneClass
 
             % load engine matrix SL
             engMatSL_table = load("CD135_SL.mat");
-            engMatSL = table2array(engMatSL_table);
+            obj.engMatSL = table2array(engMatSL_table.ans);
+            
+            % load propeller data
+            % for now, propeller data comes from piper arrow
+            etaP_envelope = load("etaP_envelope.mat");
+            
+            % prop diameter
+            obj.D_prop = 6;%ft
 
             % critical alt
             crit_alt = 6000;
@@ -130,6 +140,9 @@ classdef DC_AirplaneClass
 
         end
         % Standard getters and setters-------------------------------
+        function obj = set.W(obj,W)
+            obj.W = W;
+        end
         function obj = set.Crr(obj,CRR)
             obj.Crr = CRR;
         end
@@ -248,9 +261,23 @@ classdef DC_AirplaneClass
             if rho>rho_crit
                 % below critical altitude
                 P_shp = obj.engMatSL(length(obj.engMatSL),1)*p_pct;
+                SFC = interp1(obj.engMatSL(:,1),obj.engMatSL(:,2),P_shp);
+                rpm = interp1(obj.engMatSL(:,1),obj.engMatSL(:,3),P_shp);
             end
-            
-
+            J = obj.TAS/(rpm/60*obj.D_prop);
+            % current data has minimum J=0.1479, maximum J=2.0662
+            if J>=0.1479 && J<2.0662
+                etaP = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),J);
+                P_thp = etaP*P_shp;
+                T = P_thp*550/obj.TAS;
+            elseif J<0.1479
+                etaP_jmin = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),0.1479);
+                P_thp_jmin = etaP_jmin*P_shp;
+                TAS_jmin = 0.1479*(rpm/60*obj.D_prop);
+                T = P_thp_jmin*550/TAS_jmin;
+                P_thp = T*obj.TAS*550;
+            end
+            FF = SFC*P_shp;%lb/hr
         end
 
 

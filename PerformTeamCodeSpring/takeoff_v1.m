@@ -97,7 +97,11 @@ while L(i)<plane.W
     i = i+1;
     [D(i),~] = plane.getDrag();
     Fr(i) = plane.getRollFriction();
-    [~,T(i)] = plane.getPowerThrust(1);
+    [~, ~, ~, FF(i), T(i)] = plane.engine_prop(1);
+
+    FF(i) = FF(i)*2;% 2 engines
+    T(i) = T(i)*2;
+
     Fx(i) = T(i)-Fr(i)-D(i);
     plane.Ax = Fx(i)/(plane.W/32.17);
     Ax(i) = plane.Ax;% Clean this up to store either in object or here, not both
@@ -113,6 +117,7 @@ while L(i)<plane.W
         plane.AoA=rotAlpha;
     end
     t(i) = t(i-1)+tstep;
+    plane.W = plane.W-FF(i)*tstep;
 end
 
 end

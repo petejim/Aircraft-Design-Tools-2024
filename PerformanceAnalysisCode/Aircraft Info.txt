@@ -1,25 +1,25 @@
 --Aircraft Info--
 Wto:
-10000
+9077
 K:
-0.0114
+0.0147
 Cd0:
-0.017
+0.016
 S(ft^2):
-280
+313
 AR:
-37.5
+27
 Eta:
 0.8
 
 --Engine Info--
 MinSFC:	
-0.33
+0.355
 MaxBHP:	
-350
+270
 PointsNumber:	
 1000
 Engine Type:
-G
+D
 Service Ceiling [ft] (0 if no turbo):
-0
+6000
