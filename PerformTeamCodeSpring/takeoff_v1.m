@@ -57,6 +57,7 @@ for i = 1:length(CRRlist)
         hold on
         plot(t,D)
         plot(t,Fr)
+        plot(t,Vx)
         ttltxt = "CD0 = "+num2str(CD0list(j))+" Crr = " + num2str(CRRlist(i));
         title(ttltxt)
         xlabel('time')

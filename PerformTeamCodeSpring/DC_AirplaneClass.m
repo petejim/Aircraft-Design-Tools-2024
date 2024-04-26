@@ -119,13 +119,14 @@ classdef DC_AirplaneClass
             
             % load propeller data
             % for now, propeller data comes from piper arrow
-            etaP_envelope = load("etaP_envelope.mat");
+            envelope = load("etaP_envelope.mat");
+            obj.etaP_envelope = envelope.eta_envelope;
             
             % prop diameter
             obj.D_prop = 6;%ft
 
             % critical alt
-            crit_alt = 6000;
+            obj.crit_alt = 6000;
 
             % for now zero out position, velocity, acceleration, AoA, etc
             obj.x = 0;
@@ -277,7 +278,7 @@ classdef DC_AirplaneClass
                 T = P_thp_jmin*550/TAS_jmin;
                 P_thp = T*obj.TAS*550;
             end
-            FF = SFC*P_shp;%lb/hr
+            FF = SFC*P_shp/3600;%lb/s
         end
 
 
