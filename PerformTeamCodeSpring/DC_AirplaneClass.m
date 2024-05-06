@@ -264,15 +264,22 @@ classdef DC_AirplaneClass
                 P_shp = obj.engMatSL(length(obj.engMatSL),1)*p_pct;
                 SFC = interp1(obj.engMatSL(:,1),obj.engMatSL(:,2),P_shp);
                 rpm = interp1(obj.engMatSL(:,1),obj.engMatSL(:,3),P_shp);
+            else
+                % 107 hp at 16k
+                engMatCorr = obj.engMatSL;
+                engMatCorr(:,1) = obj.engMatSL(:,1).*rho/rho_crit;
+                P_shp = engMatCorr(length(engMatCorr),1)*p_pct;
+                SFC = interp1(engMatCorr(:,1),engMatCorr(:,2),P_shp);
+                rpm = interp1(engMatCorr(:,1),engMatCorr(:,3),P_shp);
             end
             J = obj.TAS/(rpm/60*obj.D_prop);
             % current data has minimum J=0.1479, maximum J=2.0662
             if J>=0.1479 && J<2.0662
-                etaP = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),J);
+                etaP = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),J)*0.82/0.86;
                 P_thp = etaP*P_shp;
                 T = P_thp*550/obj.TAS;
             elseif J<0.1479
-                etaP_jmin = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),0.1479);
+                etaP_jmin = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),0.1479)*0.82/0.86;
                 P_thp_jmin = etaP_jmin*P_shp;
                 TAS_jmin = 0.1479*(rpm/60*obj.D_prop);
                 T = P_thp_jmin*550/TAS_jmin;
@@ -280,7 +287,41 @@ classdef DC_AirplaneClass
             end
             FF = SFC*P_shp/3600;%lb/s
         end
-
+        function [P_shp, P_thp, SFC, FF, T] = engine_prop_voyager(obj, p_pct)
+            % simulate voyager's engines for takeoff study
+            [rho,~,~] = stdAtmosphere_imperial(obj.y,obj.deltaT);
+            [rho_crit,~,~] = stdAtmosphere_imperial(0,0);% voyager used normally aspirated engines
+            engMatCorr = obj.engMatSL*120/135;%correct power to average of voyager engines
+            if rho>rho_crit
+                % below critical altitude
+                P_shp = engMatCorr(length(engMatCorr),1)*p_pct;
+                SFC = interp1(engMatCorr(:,1),engMatCorr(:,2),P_shp);
+                rpm = interp1(engMatCorr(:,1),engMatCorr(:,3),P_shp)*2800/2300;% hack it to make rpm more realistic for direct drive
+            else
+                % 107 hp at 16k
+                engMatCorr(:,1) = engMatCorr(:,1).*rho/rho_crit;
+                P_shp = engMatCorr(length(engMatCorr),1)*p_pct;
+                SFC = interp1(engMatCorr(:,1),engMatCorr(:,2),P_shp);
+                rpm = interp1(engMatCorr(:,1),engMatCorr(:,3),P_shp)*2800/2300;%hack it to make rpm more realistic for direct drive
+            end
+            prop_dia_est = 69/12;
+            J = obj.TAS/(rpm/60*prop_dia_est);
+            % current data has minimum J=0.1479, maximum J=2.0662
+            if J>=0.1479 && J<2.0662
+                etaP = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),J)*0.82/0.86;% efficiency hit for testing
+                P_thp = etaP*P_shp;
+                T = P_thp*550/obj.TAS;
+            elseif J<0.1479
+                etaP_jmin = interp1(obj.etaP_envelope(:,1),obj.etaP_envelope(:,2),0.1479)*0.82/0.86;
+                P_thp_jmin = etaP_jmin*P_shp;
+                TAS_jmin = 0.1479*(rpm/60*prop_dia_est);
+                T = P_thp_jmin*550/TAS_jmin;
+                P_thp = T*obj.TAS*550;
+            else
+                disp('J is too high')
+            end
+            FF = SFC*P_shp/3600;%lb/s
+        end        
 
     end
 

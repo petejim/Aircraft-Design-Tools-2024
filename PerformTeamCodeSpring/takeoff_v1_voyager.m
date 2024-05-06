@@ -1,12 +1,14 @@
 % Takeoff v1 for AERO 445
-%% our plane
+
+
+%% Voyager
 % Define airplane parameters (later make this take them from file)
-WTO = 9075;
-S = 313;
-AR = 27;
+WTO = 9694;
+S = 363;
+AR = 33.7;
 osw = 0.8;
-CD0 = 0.04;
-k = 0.0147;
+CD0 = 0.040;
+k = 0.0118;
 eta_p = 0.8;
 dCL_dAoA = 6;%make this less horseshit someday
 alpha0 = -deg2rad(3.6664);%same
@@ -14,42 +16,40 @@ groundAlpha = deg2rad(0);% set this to actual value
 rotAlpha = deg2rad(8);% set this to actual value
 
 % construct airplane
-plane = DC_AirplaneClass(WTO, S, AR, osw, CD0, k, eta_p,dCL_dAoA,alpha0);
+voyager = DC_AirplaneClass(WTO, S, AR, osw, CD0, k, eta_p,dCL_dAoA,alpha0);
 
 % runway conditions
 % set CRR
 CRR = 0.037; %  value given by roskam for concrete
-plane.Crr = CRR;
+voyager.Crr = CRR;
 
 
 
 % wind conditions
 headwind = 0;
 crosswind = 0;
-plane.Wx = -headwind;
-plane.Wy = 0;
-plane.Wc = crosswind;
+voyager.Wx = -headwind;
+voyager.Wy = 0;
+voyager.Wc = crosswind;
 
 % initial conditions
-plane.x = 0;
-plane.y = 1998;
-plane.Vx = 0;
-plane.Vy = 0;
-plane.Ax = 0;
-plane.Ay = 0;
-plane.AoA = groundAlpha;
-plane.deltaT = 0;
-plane=plane.calcTAS();
+voyager.x = 0;
+voyager.y = 2311;
+voyager.Vx = 0;
+voyager.Vy = 0;
+voyager.Ax = 0;
+voyager.Ay = 0;
+voyager.AoA = groundAlpha;
+voyager.deltaT = 0;
+voyager=voyager.calcTAS();
 
 
 % calculate roskam takeoff for reference
-TOP23 = (plane.W_TO/plane.S)*(plane.W_TO/270)/(0.942829*1.4);
+TOP23 = (voyager.W_TO/voyager.S)*(voyager.W_TO/270)/(0.942829*1.4);
 STOG = 4.9*TOP23+0.009*TOP23^2;
 STO = 1.66*STOG
 
-
-
-[t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL,W,Vy,y] = takeoff_1(plane,rotAlpha);
+[t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL,W,Vy,y] = takeoff_1(voyager,rotAlpha);
 TOD= x(length(x))
 TOT= t(length(t))
 figure(1)
@@ -62,8 +62,7 @@ plot(t,y)
 plot(t,(atand(Vy./Vx)))
 
 P_thr = T.*TAS/550;
-etaP = P_thr/(270);
-
+etaP = P_thr/(130+110);
 
 xlabel('time')
 legend('Thrust','Drag','rolling resistance','x velocity','alt','gamma')
@@ -74,7 +73,7 @@ plot(x,Vx./1.68781,'LineWidth',1.5)
 grid on;
 xlabel('Distance [ft]', 'FontName', 'Calibri', 'FontSize', 14);
 ylabel('X velocity [kts]', 'FontName', 'Calibri', 'FontSize', 14);
-xlim([0, 9000]);
+xlim([0, 15000]);
 ylim([0, 100]);
 title('Velocity', 'FontName', 'Calibri', 'FontSize', 14)
 
@@ -83,8 +82,8 @@ plot(x(2:length(x)),y(2:length(y)),'LineWidth',1.5)
 grid on;
 xlabel('Distance [ft]', 'FontName', 'Calibri', 'FontSize', 14);
 ylabel('Altitude [ft]', 'FontName', 'Calibri', 'FontSize', 14);
-xlim([0, 9000]);
-ylim([1950, 2150]);
+xlim([0, 15000]);
+ylim([2250, 2450]);
 title('Altitude', 'FontName', 'Calibri', 'FontSize', 14)
 
 subplot(3,1,3)
@@ -96,44 +95,55 @@ plot(x(2:length(x)),(D(2:length(D))+Fr(2:length(Fr))),'LineWidth',1.5)
 grid on;
 xlabel('Distance [ft]', 'FontName', 'Calibri', 'FontSize', 14);
 ylabel('X Axis Forces [lbs]', 'FontName', 'Calibri', 'FontSize', 14);
-xlim([0, 9000]);
+xlim([0, 15000]);
 ylim([0, 1500]);
 legend('Thrust','Drag','Friction','Total resistance')
 title('Forces', 'FontName', 'Calibri', 'FontSize', 14)
 
-%set(gca, 'FontName', 'Calibri', 'FontSize', 10); % Adjust font of axes ticks and labels
 
 set(gcf, 'Color', 'white'); % Set background color of figure to white
 set(gcf,'Position',[100,100,800,800])
 
-
 figure(3)
 plot(x,etaP)
 
+% try some CD0s and CRRs
+% CRRlist = [0.02, 0.025, 0.03, 0.035,0.04];
+% CD0list = [0.016,0.02,0.025,0.03];
+% fn = 1;
+% for i = 1:length(CRRlist)
+%     for j = 1:length(CD0list)
+%         plane.Crr=CRRlist(i);
+%         plane.CD0=CD0list(j);
+%         [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL] = takeoff_1(plane,rotAlpha);
+%         TOG(i,j) = x(length(x));
+%         TOT(i,j) = t(length(t));
+%         figure(fn)
+%         plot(t,T)
+%         hold on
+%         plot(t,D)
+%         plot(t,Fr)
+%         plot(t,Vx)
+%         ttltxt = "CD0 = "+num2str(CD0list(j))+" Crr = " + num2str(CRRlist(i));
+%         title(ttltxt)
+%         xlabel('time')
+%         legend('Thrust','Drag','rolling resistance')
+%         fn = fn+1;
+%     end
+% end
 
-%% Temperature
-dTlist = linspace(0,30,2);
-for i = 1:length(dTlist)
-    plane.deltaT = dTlist(i);
-    [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL,W,Vy,y] = takeoff_1(plane,rotAlpha);
-    TOD(i)= x(length(x));
-end
-
-figure(4)
-plot(dTlist,TOD, 'r', 'LineWidth', 2)
-
-xlabel('\DeltaT [^oC]', 'FontName', 'Calibri', 'FontSize', 12)
-ylabel('Takeoff Distance [ft]', 'FontName', 'Calibri', 'FontSize', 12)
-title("Takeoff Performance vs Temperature", 'FontName', 'Calibri', 'FontSize', 16)
-grid on;
-
-set(gca, 'FontName', 'Calibri', 'FontSize', 10); % Adjust font of axes ticks and labels
-
-set(gcf, 'Color', 'white'); % Set background color of figure to white
 
 
 
-
+%% plot
+% fn = fn+1;
+% figure(fn)
+% contour(CD0list,CRRlist,TOG,'ShowText','on')
+% xlabel('CD0')
+% ylabel('CRR')
+% fn = fn+1;
+% figure(fn)
+% contour(CD0list,CRRlist,TOT,'ShowText','on')
 
 %% functions
 function [t,L,D,Fr,T,Fx,Ax,Vx,x,TAS,rotL,rotCL,W,Vy,y] = takeoff_1(plane,rotAlpha)
@@ -147,7 +157,7 @@ t(i) = 0;
 [L(i),~]=plane.getL();
 [D(i),~] = plane.getDrag();
 Fr(i) = plane.getRollFriction();
-[~,T(i)] = plane.engine_prop(1);
+[~,T(i)] = plane.engine_prop_voyager(1);
 Fx(i) = T(i)-Fr(i)-D(i);
 Ax(i) = plane.Ax;
 Vx(i) = plane.Vx;
@@ -160,7 +170,7 @@ while rotCondition == 0
     i = i+1;
     [D(i),~] = plane.getDrag();
     Fr(i) = plane.getRollFriction();
-    [~, ~, ~, FF(i), T(i)] = plane.engine_prop(1);
+    [~, ~, ~, FF(i), T(i)] = plane.engine_prop_voyager(1);
 
     FF(i) = FF(i)*2;% 2 engines
     T(i) = T(i)*2;
@@ -196,7 +206,7 @@ while L(i)<plane.W
     i = i+1;
     [D(i),~] = plane.getDrag();
     Fr(i) = plane.getRollFriction();
-    [~, ~, ~, FF(i), T(i)] = plane.engine_prop(1);
+    [~, ~, ~, FF(i), T(i)] = plane.engine_prop_voyager(1);
 
     FF(i) = FF(i)*2;% 2 engines
     T(i) = T(i)*2;
@@ -232,7 +242,7 @@ while (plane.y-fieldElev)<50
     i = i+1;
     plane.Ay = Fy/(plane.W/32.17);
     [D(i),~] = plane.getDrag();
-    [~, ~, ~, FF(i), T(i)] = plane.engine_prop(1);
+    [~, ~, ~, FF(i), T(i)] = plane.engine_prop_voyager(1);
     FF(i) = FF(i)*2;% 2 engines
     T(i) = T(i)*2;
     Fx(i) = T(i)-D(i)-(plane.Vy/plane.Vx)*plane.W;%added approximate term to deal with energy going into climb
@@ -253,6 +263,7 @@ while (plane.y-fieldElev)<50
     plane.W = plane.W-FF(i)*tstep;
     W(i) = plane.W;
     Fr(i) = 0;
+
 end
 
 
