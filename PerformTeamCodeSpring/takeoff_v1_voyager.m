@@ -11,7 +11,7 @@ CD0 = 0.040;
 k = 0.0118;
 eta_p = 0.8;
 dCL_dAoA = 6;%make this less horseshit someday
-alpha0 = -deg2rad(3.6664);%same
+alpha0 = -deg2rad(3.6664);% same
 groundAlpha = deg2rad(0);% set this to actual value
 rotAlpha = deg2rad(8);% set this to actual value
 

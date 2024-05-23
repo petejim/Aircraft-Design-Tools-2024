@@ -39,6 +39,10 @@ classdef DC_AirplaneClass
         % State Variables-------------------------------------
         % current weight
         W
+        % Time [s]
+        time
+        % Step size [s]
+        delT
         % x position [ft]
         x
         % y position (alt) [ft]
