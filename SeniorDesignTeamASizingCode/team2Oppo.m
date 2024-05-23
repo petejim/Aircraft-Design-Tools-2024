@@ -2,37 +2,48 @@
 
 close all; clear; clc;
 
-dist1 = 14500;
+% 9077
 
-rangeDes = 19908;
+% 3105
 
+dist1 = 14000;
+
+%
+rangeDes = 20291;
+
+%
 bregTypes = [1,2];
 
 dists = [dist1;rangeDes - dist1];
 
-veloTAS = [146;146];
+%
+veloTAS = [102-6.5;102-6.5];
 
-vWind = [8;8];
+%
+vWind = [6.5;6.5];
 
-alt = [10000;27000];
+%
+alt = [2500;20000];
 
-SFCs = [0.35;0.35];
+%
+SFCs = [0.358;0.361];
 
-wPayload = 645;
+%
+wPayload = 700;
 
-wRF = 150;
+wRF = 245;
 
-WS = 46.4;
+WS = 29;
 
-EWF = 0.347;
+EWF = 0.342;
 
 eta = 0.8;
 
-AR = 30;
+AR = 27;
 
 osw = 0.8;
 
-CD0 = 0.0173;
+CD0 = 0.0160;
 
 disp(1/(pi * AR * osw))
 
@@ -64,15 +75,17 @@ timeHoursMinusDays = round(totT - timeDays * 24);
 disp("Time to complete route: " + timeDays + " days, " + timeHoursMinusDays + " hour(s)")
 
 [xMission,vTASMission,vGrndMission,wMission,rhoMission,CLMission,LDMission...
-    ,pShaftMission] = missionProfileSegments3(100,[1,1],bregTypes,MTOW,...
+    ,pShaftMission,altMission] = missionProfileSegments3(100,[1,1],bregTypes,MTOW,...
     fFuel,dists,veloTAS,vWind,alt,SFCs,WS,EWF,eta,AR,osw,CD0);
 
 LDavg = sum((LDMission(1:end-1) + LDMission(2:end)) ./ 2 .* (xMission(2:end) - xMission(1:end-1))) / range;
 
+pAvg = sum((pShaftMission(1:end-1) + pShaftMission(2:end)) ./ 2 .* (xMission(2:end) - xMission(1:end-1))) / range;
+
+
 disp(LDavg)
 
-
-
+disp(pAvg)
 figure
 
 plot(xMission,pShaftMission,LineWidth=1.5)

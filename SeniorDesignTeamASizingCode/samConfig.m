@@ -2,39 +2,37 @@
 
 close all; clear; clc;
 
-dist1 = 14500;
+segmts = 2;
 
 rangeDes = 19908;
 
-bregTypes = [1,2];
+bregTypes = 2 + zeros(segmts,1);
 
-dists = [dist1;rangeDes - dist1];
+bregTypes(2,1) = 2;
 
-veloTAS = [146;146];
+% bregTypes(end) = 0;
+% 
+% bregTypes(1) = 1;
 
-vWind = [8;8];
+dists = rangeDes / segmts + zeros(segmts,1);
 
-alt = [10000;27000];
+dists(1) = 10000;
 
-SFCs = [0.35;0.35];
+dists(2) = 9908;
 
-wPayload = 645;
 
-wRF = 150;
-
-WS = 46.4;
-
-EWF = 0.347;
-
-eta = 0.8;
-
-AR = 30;
-
-osw = 0.8;
-
-CD0 = 0.0173;
-
-disp(1/(pi * AR * osw))
+veloTAS   = [120.44;120.44];
+vWind     = [0;0];
+alt       = [8000;8000];
+SFCs      = [0.355;0.355];
+wPayload  = 645;
+wRF       = 150;
+WS        = 43.879;
+EWF       = 0.3234;
+eta       = 0.8;
+AR        = 30;
+osw       = 0.8;
+CD0       = 0.017;
 
 [Result] = weightFromSegments(bregTypes,dists,veloTAS,vWind,alt,SFCs,...
     wPayload,wRF,WS,EWF,eta,AR,osw,CD0);
@@ -67,11 +65,6 @@ disp("Time to complete route: " + timeDays + " days, " + timeHoursMinusDays + " 
     ,pShaftMission] = missionProfileSegments3(100,[1,1],bregTypes,MTOW,...
     fFuel,dists,veloTAS,vWind,alt,SFCs,WS,EWF,eta,AR,osw,CD0);
 
-LDavg = sum((LDMission(1:end-1) + LDMission(2:end)) ./ 2 .* (xMission(2:end) - xMission(1:end-1))) / range;
-
-disp(LDavg)
-
-
 
 figure
 
@@ -82,6 +75,6 @@ ax = gca;
 ax.XAxis.Exponent = 0;
 ax.YAxis.Exponent = 0;
 grid on
-if length(dists) ~= 1
+if dists ~= 1
     xline([cumsum(dists(1:end-1,1))],color="r",LineStyle="--")
 end

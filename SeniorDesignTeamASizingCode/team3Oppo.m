@@ -2,37 +2,49 @@
 
 close all; clear; clc;
 
-dist1 = 14500;
+% 9077
 
-rangeDes = 19908;
+% 3105
 
+dist1 = 5500;
+
+%
+rangeDes = 20290;
+
+%
 bregTypes = [1,2];
 
 dists = [dist1;rangeDes - dist1];
 
-veloTAS = [146;146];
+%
+veloTAS = [102-6.5;102-6.5];
 
-vWind = [8;8];
+%
+vWind = [6.5;6.5];
 
-alt = [10000;27000];
+%
+alt = [3000;10000];
 
-SFCs = [0.35;0.35];
+%
+SFCs = [0.358;0.358];
 
-wPayload = 645;
+%
+wPayload = 700;
 
-wRF = 150;
+% This seems to be their effective reserve based on the requirements
+wRF = 110;
 
-WS = 46.4;
+WS = 29;
 
-EWF = 0.347;
+EWF = 0.33;
 
 eta = 0.8;
 
-AR = 30;
+AR = 22;
 
 osw = 0.8;
 
-CD0 = 0.0173;
+CD0 = 0.0147;
 
 disp(1/(pi * AR * osw))
 

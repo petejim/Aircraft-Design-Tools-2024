@@ -1,5 +1,5 @@
 function [xMission,vTASMission,vGrndMission,wMission,rhoMission,CLMission,...
-    LDMission,pShaftMission] = ...
+    LDMission,pShaftMission,altMission] = ...
     missionProfileSegments3(res,plots,bregTypes,MTOW,fFuel,...
     dists,veloTAS,vWind,altitudes,SFCs,WS,EWF,eta,AR,osw,CD0)
 %% Description 
@@ -22,12 +22,12 @@ function [xMission,vTASMission,vGrndMission,wMission,rhoMission,CLMission,...
 % vWind     = vector of windspeeds for each segment                   [kts]
 % altitudes = vector of altitudes for each segment                    [ft]
 % SFCs      = vector of specific fuel consumptions for each segment   [lbf/hr/hp]
-% WS        = vector of wing loadings for each segment                [lbf/ft^2]
-% EWF       = vector of empty  weight fractions for each segment      [ratio]
-% eta       = vector of propeller efficiencies for each segment       [ratio]
-% AR        = vector of aspect ratios for each segment                [ratio]
-% osw       = vector of Oswald efficiencies for each segment          [ratio]
-% CD0       = vector of zero lift drag coefficients for each segment  [ratio]
+% WS        = wing loadings at beginning                              [lbf/ft^2]
+% EWF       = empty  weight fraction                                  []
+% eta       = propeller efficiency                                    []
+% AR        = aspect                                                  []
+% osw       = Oswald efficiency                                       []
+% CD0       = parasitic drag coefficient                              []
 
 %% Outputs
 % xMission      = vector of distances for each point                  [nm]
