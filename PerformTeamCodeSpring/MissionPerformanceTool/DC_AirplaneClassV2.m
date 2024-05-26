@@ -39,10 +39,12 @@ classdef DC_AirplaneClassV2 < handle
         % State Variables-------------------------------------
         % current weight
         W
+        % weight change rate [lb/s]
+        wDot
         % Time [s]
         time
         % Step size [s]
-        delT
+        tStep
         % x position [ft]
         x
         % y position (alt) [ft]
@@ -67,6 +69,8 @@ classdef DC_AirplaneClassV2 < handle
         Wc
         % True airspeed [ft/s]
         TAS
+        % Density [slug/ft^3]
+        rho
         % prop efficiency envelope
         etaP_envelope
         % prop diameter [ft]
@@ -79,6 +83,14 @@ classdef DC_AirplaneClassV2 < handle
         crosswind
         % Drag polar [CD, CL]
         dragPolar
+        % Shaft power [hp]
+        shaftPower
+        % Lift coefficient
+        CL
+        % Drag coefficient
+        CD
+        % Drag [lbf]
+        drag
 
     end
 
@@ -309,7 +321,7 @@ classdef DC_AirplaneClassV2 < handle
             % obj.TAS [ft/s]
 
             % Density from standard atmosphere
-            rho = stdAtmosphere_imperial(obj.y, obj.deltaT);
+            [rho, ~, ~] = stdAtmosphere_imperial(obj.y, obj.deltaT);
         
             % Solve for CL
             CL = obj.W / (0.5 * rho * obj.S * obj.TAS^2);
@@ -343,6 +355,96 @@ classdef DC_AirplaneClassV2 < handle
 
             % Find the drag coefficient for the given lift coefficient
             CD = interp1(obj.dragPolar(:,2), obj.dragPolar(:,1), CL);
+
+        end
+
+        function [SFC, shaftPower] = getSFC(obj, powerRequired)
+            % Function returns the specific fuel consumption for a given power setting
+            % powerRequired: power from drag [lb-ft/s]
+            % obj.engMatSL: engine data
+
+            % Returns:
+            % SFC: specific fuel consumption [lb/hp/hr]
+            % shaftPower: shaft power [hp]
+
+            % Propeller efficiency
+            power = missionConversions(powerRequired / obj.eta_p, "lb_ft_sTohp");
+
+            % Returns:
+            % SFC: specific fuel consumption [lb/hp/hr]
+
+            % Check if the engine data is loaded
+            if isempty(obj.engMatSL)
+                error('Engine data not loaded. Use setEngine() to load the data.');
+            end
+
+            % Max power adjustment (came from mario's engine tool)
+            if obj.y > obj.crit_alt
+
+                % Difference between current altitude and critical altitude
+                % I'm thinking this should be replaced with a pressure difference
+                difference = obj.y - obj.crit_alt;
+                % Density from standard atmosphere
+                [rho, ~, ~] = stdAtmosphere_imperial(difference, 0);
+                % Find ratio of current density to sea level density
+                ratio = rho / 0.002377;
+                % Adjust power
+                powerRatio = 1.132 * ratio - 0.132;
+
+            end
+
+            if obj.y > obj.crit_alt
+                if power > obj.engMatSL(end, 1) * powerRatio
+                    error('Power setting exceeds maximum engine power.');
+                end
+            elseif power > obj.engMatSL(end, 1)
+                error('Power setting exceeds maximum engine power.');
+            end
+
+            % Find the specific fuel consumption for the given power setting
+            SFC = interp1(obj.engMatSL(:,1), obj.engMatSL(:,2), power);
+
+            % Set shaft power
+            shaftPower = power;
+
+        end
+
+        function [force] = forceFromCoefficient(obj, coeffVal)
+            % Function calculates the force from a coefficient value
+            % coeffVal: coefficient value
+            % obj.rho: air density
+            % obj.S: wing area
+            % obj.TAS: true airspeed
+
+            % Returns:
+            % force: force [lbs]
+
+            % Calculate dynamic pressure
+            q = 0.5 * obj.rho * obj.TAS^2;
+
+            % Calculate force
+            force = coeffVal * q * obj.S;
+
+        end
+
+        function [] = setVelocsByTailAndCross(obj)
+            % Function sets the x and y velocities based on the tailwind and crosswind
+            % obj.TAS: true airspeed
+            % obj.tailwind: tailwind
+            % obj.crosswind: crosswind
+
+            % Sets:
+            % obj.Vx: x velocity [ft/s]
+
+            % Convert crosswind and tailwind to ft/s
+            crosswindLoc = missionConversions(obj.crosswind, "ktToft_s");
+            tailwindLoc = missionConversions(obj.tailwind, "ktToft_s");
+            
+            % angle plane flies relative to ground track
+            alpha = asin(crosswindLoc/obj.TAS);
+
+            % x velocity
+            obj.Vx = obj.TAS*cos(alpha) + tailwindLoc;
 
         end
 

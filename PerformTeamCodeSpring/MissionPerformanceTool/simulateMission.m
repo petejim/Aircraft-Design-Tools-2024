@@ -86,13 +86,52 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
     crosswinds = cell(1, route.numDays);
     distance = cell(1, route.numDays);
 
-    % Get wind data on each day
-    for i = 1:route.numDays
+    % The chunk of code below will either load wind data, generate wind data, or generate the wind data and save it to a file
+    % based on whether the user specifies a wind data file in the route struct and if it exists.
+
+    if isfield(route, 'windDataFile')
+
+        % if the file does not exist, generate the wind data
+        filename = fullfile("WindDataLoaded", route.windDataFile);
+        if ~isfile(filename)
+
+            % Get wind data on each day
+            for i = 1:route.numDays
+                
+                % Get the wind data for the day
+                [tailwinds{i}, crosswinds{i}, ~, ~, distance, ~, ~, ~, ~, ~] = profileTeamFNoPy(controlPointsLongLat, setWeatherDist, days{i});
+
+            end
+
+            % Save the wind data to a file
+            
+            save(filename, "tailwinds", "crosswinds", "distance");
         
-        % Get the wind data for the day
-        [tailwinds{i}, crosswinds{i}, ~, ~, ~, distance{i}, ~, ~, ~, ~] = profileTeamFNoPy(controlPointsLongLat, setWeatherDist, days{i});
+        else
+
+            % If the file does exist, load the wind data
+            windData = load(filename);
+    
+            tailwinds = windData.tailwinds;
+            crosswinds = windData.crosswinds;
+            distance = windData.distance;
+
+        end
+
+    else
+
+        % If the user does not specify a wind data file, generate the wind data and don't save it
+
+        % Get wind data on each day
+        for i = 1:route.numDays
+
+            % Get the wind data for the day
+            [tailwinds{i}, crosswinds{i}, ~, ~, distance, ~, ~, ~, ~, ~] = profileTeamFNoPy(controlPointsLongLat, setWeatherDist, days{i});
+
+        end
 
     end
+
 
     % Preallocate for 3D wind arrays
     tailjoe = zeros([size(tailwinds{1},1), size(tailwinds{1}, 2), length(tailwinds)]);
@@ -101,40 +140,67 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
     % Convert data to 3D array
     for i = 1:length(tailwinds)
         tailjoe(:, :, i) = tailwinds{i};
-        crossjoe(:, :, i) = tailwinds{i};
+        crossjoe(:, :, i) = crosswinds{i};
     end
 
 
     % Store the wind data in the route struct
-    route.tailwinds = tailwinds;
-    route.crosswinds = crosswinds;
+    route.tailwinds = tailjoe;
+    route.crosswinds = crossjoe;
     route.weatherDistActual = distance;
 
 
     % Clear placeholder variables
-    clear tailwinds crosswinds controlPointsLongLat setWeatherDist days...
-        tailjoe crossjoe;
+    clear tailwinds crosswinds controlPointsLongLat setWeatherDist days tailjoe crossjoe;
 
 
     %% Main Loop
 
     while complete == false
 
+        % Iterate throught the active events and check if they are still active
+        for i = 1:length(events)
+
+            % If the event is active, check if it is still active
+            if events{i}.active == true && events{i}.startCondition(aircraftObject) == false
+
+                events{i}.active = false;
+
+            end
+        
+        end
+
         % Check event logic by iterating through the events
         for i = 1:length(events)
             
-            % If event start logic is true, then start the event
-            if events{i}.startCondition(aircraftObject) == true 
+            % If event start logic is true, 
+            % the event is not already active, 
+            % and the event is not expended, 
+            % then start the event
+            if events{i}.expended == false && events{i}.active == false && events{i}.startCondition(aircraftObject) == true
 
                 % If the event has a new ode, then set the new ode
-                if isfield(events{i}, 'ode')
+                if isa(events{i}.ode, 'function_handle')
                     simSolver = events{i}.ode;
                 end
 
                 % If the event has a change to the plane, then set the planeConfig
-                if isfield(events{i}, 'planeConfig')
+                if isa(events{i}.planeConfig, 'function_handle')
                     events{i}.planeConfig(aircraftObject);
                 end
+
+                % Set the event as expended if it does not repeat
+                if events{i}.repeat == false
+
+                    events{i}.expended = true;
+
+                end
+
+                % Set the event to active
+                events{i}.active = true;
+
+                % State that the event has started
+                disp(['Event "', events{i}.name, '" has started.']);
 
                 % If the event is terminal, then end the simulation
                 if isfield(events{i}, 'eventTerminal')
@@ -213,6 +279,10 @@ end
 
 % Solver will be in place until next event with a solver switches it out. If two events with solvers get 
 % triggered at the same time, the last one will be the one that is used.
+
+% Events will not repeat their action until their start condition is not true for at least one time step.
+% This means that if an event is triggered, it will not be triggered again until the start condition is false then true again.
+% Because truth of startCondition is evaluated on each time step, carefull with the complexity of the startCondition function.
 
 
 %% TODO:

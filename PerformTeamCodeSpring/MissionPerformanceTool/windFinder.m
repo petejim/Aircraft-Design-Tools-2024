@@ -6,12 +6,12 @@ function [] = windFinder(aircraftObject, route)
     % aircraftObject: object containing the aircraft's current state
     % route: object containing the route information
     
-    time_sec = aircraftObject.t;           % [sec]
+    time_sec = aircraftObject.time;           % [sec]
     distance_current = missionConversions(aircraftObject.x, "ftToNM");   % [NM]
     altitude_ft = aircraftObject.y;        % [ft]
     all_tailwind = route.tailwinds;        % [kt]
     all_crosswind = route.crosswinds;      % [kt]
-    distance = route.distance;             % [NM]
+    distance = route.weatherDistActual;    % [NM]
 
     %% Outputs:
     % tailwindKnots: tailwind component of wind at the current point [kt]
@@ -46,7 +46,7 @@ function [] = windFinder(aircraftObject, route)
     y = distance;
 
     % z vals are the day
-    z = 0:size(all_tailwind, 3) - 1;
+    z = (0:size(all_tailwind, 3) - 1)';
 
     % xp is the current pressure altitude
     xp = altitudeToPressureHpa(altitude_ft);
@@ -67,11 +67,21 @@ function [] = windFinder(aircraftObject, route)
 
     %% Interpolation
 
+    [X, Y, Z] = meshgrid(y, x, z);
+
     % Interpolate the tailwind and crosswind components
-    aircraftObject.tailwind = interp3(x, y, z, all_tailwind, xp, yp, zp);
+    aircraftObject.tailwind = interp3(y, x, z, all_tailwind, yp, xp, zp);
 
-    aircraftObject.crosswind = interp3(x, y, z, all_crosswind, xp, yp, zp);
-
+    aircraftObject.crosswind = interp3(y, x, z, all_crosswind, yp, xp, zp);
+    
+    % For each out-of-range query, find the closest point in the dataset and assign its value
+    if isnan(aircraftObject.tailwind)
+        [~, idx] = min(abs(x - xp));
+        [~, idx2] = min(abs(y - yp));
+        [~, idx3] = min(abs(z - zp));
+        aircraftObject.tailwind = all_tailwind(idx, idx2, idx3);
+        aircraftObject.crosswind = all_crosswind(idx, idx2, idx3);
+    end
 
 
 end
