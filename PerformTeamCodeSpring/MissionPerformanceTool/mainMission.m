@@ -40,8 +40,8 @@ thePlane.setDragPolar(dragPolarPath);
 
 % Load in propulsion data/model
 thePlane.setEngine(engineDeckPath);
-thePlane.CL = 0;
-thePlane.CD = 0;
+% thePlane.CL = 0;
+% thePlane.CD = 0;
 
 % Set time
 thePlane.tStep = tStep;
@@ -144,14 +144,15 @@ datatable = simulateMission(thePlane, route, events, fieldsToStore);
 disp("Fuel Consumed: ")
 disp(table2array(datatable(1,"W")) - table2array(datatable(end-1,"W")))
 
-plot(table2array(datatable(1:end-1,"x")),table2array(datatable(1:end-1,"CL")))
+plot(table2array(datatable(2:end-1,"x")),table2array(datatable(2:end-1,"CL")))
 
-CL = table2array(datatable(1:end-1,"CL"));
-CD = table2array(datatable(1:end-1,"CD"));
-x = table2array(datatable(1:end-1,"x"));
-TAS = table2array(datatable(1:end-1,"TAS"));
-tailwind = table2array(datatable(1:end-1,"tailwind"));
-crosswind = table2array(datatable(1:end-1,"crosswind"));
+CL = table2array(datatable(2:end-1,"CL"));
+CD = table2array(datatable(2:end-1,"CD"));
+x = table2array(datatable(2:end-1,"x"));
+TAS = table2array(datatable(2:end-1,"TAS"));
+tailwind = table2array(datatable(2:end-1,"tailwind"));
+crosswind = table2array(datatable(2:end-1,"crosswind"));
+Vx = table2array(datatable(2:end-1,"Vx"));
 
 figure
 % Plot L/D vs x
@@ -160,4 +161,21 @@ xlabel("Distance [NM]")
 ylabel("L/D")
 title("L/D vs Distance")
 
+figure
+% Plot TAS and Vx vs x
+plot(x./6076.11,TAS)
+hold on
+plot(x./6076.11,Vx)
+xlabel("Distance [NM]")
+ylabel("Speed [kts]")
+title("Speed vs Distance")
+
+figure
+% Plot tailwind and crosswind vs x
+plot(x./6076.11,tailwind)
+hold on
+plot(x./6076.11,crosswind)
+xlabel("Distance [NM]")
+ylabel("Wind [kts]")
+title("Wind vs Distance")
 
