@@ -10,6 +10,10 @@
 
 clear; close all; clc;
 
+% Path to weather team code
+addpath("../../WindAnalysisCode/");
+addpath("AtmosphereFuncs/");
+addpath("ODEs/");
 
 %% Generate the aircraft object
 
@@ -21,11 +25,20 @@ clear; close all; clc;
 
 %% Route initialization
 
+route.startDate = "01-Dec-2023";
+route.numDays = 10; % This is the maximum number of days the mission will run for
+route.controlPointsLatLong = ...
+[-21.45, -48.24;
+-26.2225, 28.0092;
+-31.9986, 115.5203;
+-34.46389, 172.8703;
+-30.000, -149.0000;
+-27.161, -109.4308;
+-58.6833, -64.933;
+-21.45, -48.24];
+route.setWeatherDist = 100; % nm Distance between requested weather points
+
 % Load in the route data (coordinates, distance, airport elevation)
-
-%% Wind data initialization
-
-% Load wind data from the wind data file or the wind data model
 
 %% Set up the events
 
@@ -45,7 +58,7 @@ events = struct([]);
 
 % Event 1: Takeoff
 events{1}.name = 'Takeoff';
-evetns{1}.planeConfig = @takeoffConfig;
+events{1}.planeConfig = @takeoffConfig;
 events{1}.ode = @takeoffFunc;
 events{1}.startCondition = @takeoffStart;
 events{1}.endCondition = @takeoffEnd;
@@ -67,8 +80,8 @@ fieldsToStore = {'time', 'x', 'y', 'Vx', 'Vy', 'Ax', 'Ay'};
 %% Simulate
 
 
-% simulateMission(aircraftObject, route, wind, events);
-
+% simulateMission(aircraftObject, route, events, fieldsToStore);
+simulateMission(route, events, fieldsToStore);
 
 
 

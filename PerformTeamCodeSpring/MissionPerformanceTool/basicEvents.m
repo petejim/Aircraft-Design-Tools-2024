@@ -16,7 +16,7 @@ function [altCheckFunc] = altitudeEvent(altitudeMin, altitudeMax)
     % Return an anonymous function that checks if the plane's altitude is
     % within the specified bounds
     % If no min or max is desired, specify false
-
+    
     if altitudeMin == false
         altCheckFunc = @(aircraftObject) aircraftObject.altitude <= altitudeMax;
     elseif altitudeMax == false

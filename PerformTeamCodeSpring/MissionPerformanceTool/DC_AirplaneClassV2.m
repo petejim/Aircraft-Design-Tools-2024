@@ -73,6 +73,10 @@ classdef DC_AirplaneClassV2 < handle
         D_prop
         % Standard atmosphere temperature offset
         deltaT
+        % Tailwind [kt] positive is tailwind
+        tailwind
+        % Crosswind [kt] (I don't know the sign convention)
+        crosswind
     end
 
     methods
