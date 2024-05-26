@@ -255,6 +255,9 @@ function [newTable] = extractData(aircraftObject, fieldsToStore)
     for i = 1:length(fieldsToStore)
         fieldName = fieldsToStore{i};
         fieldValue = aircraftObject.(fieldName);
+        if isempty(fieldValue)
+            fieldValue = nan;
+        end
         newTable.(fieldName) = fieldValue;
     end
 
