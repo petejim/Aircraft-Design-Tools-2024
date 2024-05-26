@@ -1,6 +1,6 @@
 function [value] = missionConversions(value, conversionType)
     % This function converts the input value to the desired output value
-    % based on the conversion type.
+    % based on the conversion type. Input can be an array.
     % Inputs:
     % value: the value to be converted
     % conversionType: the type of conversion to be done (string)
@@ -11,17 +11,21 @@ function [value] = missionConversions(value, conversionType)
 
     % Conversion functions
 
+
+    %%%%%%%%%%%%%%%% IMPORTANT %%%%%%%%%%%%%%%%%%
+    % All functions should be vectorized to allow for element-wise operations
+
     %% Distance
     conversions.ftToNM = @(value) value * 12 * 2.54 / 100 / 1852;
-    conversions.NMToft = @(value) value / conversions.ftToNM(1);
+    conversions.NMToft = @(value) value ./ conversions.ftToNM(1);
 
     %% Speed
-    conversions.ktToft_s = @(value) conversions.NMToft(value) / 3600;
-    conversions.ft_sTokt = @(value) value / conversions.ktToft_s(1);
+    conversions.ktToft_s = @(value) conversions.NMToft(value) ./ 3600;
+    conversions.ft_sTokt = @(value) value ./ conversions.ktToft_s(1);
 
     %% Power
     conversions.hpTolb_ft_s = @(value) value * 550;
-    conversions.lb_ft_sTohp = @(value) value / conversions.hpTolb_ft_s(1);
+    conversions.lb_ft_sTohp = @(value) value ./ conversions.hpTolb_ft_s(1);
 
 
 
