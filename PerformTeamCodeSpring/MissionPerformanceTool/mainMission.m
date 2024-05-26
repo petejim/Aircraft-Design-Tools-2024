@@ -14,14 +14,34 @@ clear; close all; clc;
 addpath("../../WindAnalysisCode/");
 addpath("AtmosphereFuncs/");
 addpath("ODEs/");
+addpath("VladoTakeoffData/")
 
 %% Generate the aircraft object
 
-% Load in aircraft parameters
+WTO = 9077; % [lb] Maximum takeoff weight
+S = 313; % [ft^2] Wing area
+AR = 27; % Aspect ratio
+osw = 0.95; % Oswald efficiency factor
+CD0 = 0.02; % Zero lift drag coefficient
+k = 1/(pi * osw * AR); % Lift induced drag factor
+eta_p = 0.8; % Propeller efficiency
+dCL_dAoA = 0.1; % Change in lift coefficient with respect to angle of attack
+alpha0 = 0; % Zero lift angle of attack
+dragPolarPath = "DragPolars/aethon_5_10.xlsx"; % Path to the drag polar
+engineDeckPath = "EngineData/CD135_SL.mat"; % Path to the engine deck
+delT = 1; % Simulation time step [s]
 
-% Load in aerodynamic data/model
+% Load in aircraft parameters
+thePlane = DC_AirplaneClassV2(WTO, S, AR, osw, CD0, k, eta_p, dCL_dAoA, alpha0);
+
+% Set drag polar
+thePlane.setDragPolar(dragPolarPath);
 
 % Load in propulsion data/model
+thePlane.setEngine(engineDeckPath);
+
+% Set time
+thePlane.delT = delT;
 
 %% Route initialization
 
@@ -62,6 +82,7 @@ events{1}.planeConfig = @takeoffConfig;
 events{1}.ode = @takeoffFunc;
 events{1}.startCondition = @takeoffStart;
 events{1}.endCondition = @takeoffEnd;
+events{1}.expended = false; % This is a flag to indicate if the event has been used
 
 % Event 2: Full power climb
 events{2}.name = 'Full power climb';
@@ -69,6 +90,7 @@ events{2}.planeConfig = @bestClimbConfig;
 events{2}.ode = @bestClimb;
 events{2}.startCondition = @bestClimbStart;
 events{2}.endCondition = @bestClimbEnd;
+events{2}.expended = false;
 
 %% Data Storage
 
@@ -79,9 +101,7 @@ fieldsToStore = {'time', 'x', 'y', 'Vx', 'Vy', 'Ax', 'Ay'};
 
 %% Simulate
 
-
-% simulateMission(aircraftObject, route, events, fieldsToStore);
-simulateMission(route, events, fieldsToStore);
+simulateMission(thePlane, route, events, fieldsToStore);
 
 
 

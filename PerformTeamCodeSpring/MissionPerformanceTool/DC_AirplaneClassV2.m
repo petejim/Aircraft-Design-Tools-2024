@@ -30,7 +30,7 @@ classdef DC_AirplaneClassV2 < handle
         % zero-lift AoA
         alpha0
 
-        % Sea level engine matrix
+        % Sea level engine matrix [P, SFC, RPM]
         engMatSL
 
         % critical altitude
@@ -65,7 +65,7 @@ classdef DC_AirplaneClassV2 < handle
         Wy
         % crosswind component [ft/s]
         Wc
-        % True airspeed
+        % True airspeed [ft/s]
         TAS
         % prop efficiency envelope
         etaP_envelope
@@ -77,10 +77,13 @@ classdef DC_AirplaneClassV2 < handle
         tailwind
         % Crosswind [kt] (I don't know the sign convention)
         crosswind
+        % Drag polar [CD, CL]
+        dragPolar
+
     end
 
     methods
-        function obj = DC_AirplaneClass(WTO, S, AR, osw, CD0, k, eta_p, dCL_dAoA, alpha0)
+        function obj = DC_AirplaneClassV2(WTO, S, AR, osw, CD0, k, eta_p, dCL_dAoA, alpha0)
             % Constructor
 
             % WTO     = Takeoff weight                          [lbs]
@@ -137,6 +140,7 @@ classdef DC_AirplaneClassV2 < handle
             obj.crit_alt = 6000;
 
             % for now zero out position, velocity, acceleration, AoA, etc
+            obj.time = 0;
             obj.x = 0;
             obj.y = 0;
             obj.Vx = 0;
@@ -291,6 +295,56 @@ classdef DC_AirplaneClassV2 < handle
             end
             FF = SFC*P_shp/3600;%lb/s
         end        
+
+
+        %% Methods for Mission Simulation
+
+        function [CL] = steadyLevelCL(obj)
+
+            % Function solves for the lift coefficient in steady level flight
+
+            % obj.W [lbs]
+            % obj.rho [slugs/ft^3]
+            % obj.S [ft^2]
+            % obj.TAS [ft/s]
+
+            % Density from standard atmosphere
+            rho = stdAtmosphere_imperial(obj.y, obj.deltaT);
+        
+            % Solve for CL
+            CL = obj.W / (0.5 * rho * obj.S * obj.TAS^2);
+        
+        end
+
+        function [] = setDragPolar(obj, path)
+            % Function sets the drag polar for the aircraft object
+            % path: path to the drag polar spreadsheet (assumes .xlsx first column is CD, second column is CL)
+            obj.dragPolar = readmatrix(path);
+
+        end
+
+        function [] = setEngine(obj, path)
+            % Function sets the engine data for the aircraft object
+            % path: path to the engine data spreadsheet (assumes .xlsx first column is power, second column is SFC, third column is RPM)
+            engineData = table2array(load(path).ans);
+            obj.engMatSL = engineData;
+
+        end
+
+        function [CD] = cdFromDragPolarSpreadsheet(obj, CL)
+            % Function returns the drag coefficient for a given lift coefficient
+            % CL: lift coefficient
+            % obj.dragPolar: drag polar data
+
+            % Check if the drag polar data is loaded
+            if isempty(obj.dragPolar)
+                error('Drag polar data not loaded. Use setDragPolar() to load the data.');
+            end
+
+            % Find the drag coefficient for the given lift coefficient
+            CD = interp1(obj.dragPolar(:,2), obj.dragPolar(:,1), CL);
+
+        end
 
     end
 

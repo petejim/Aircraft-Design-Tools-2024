@@ -113,7 +113,7 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
 
     % Clear placeholder variables
     clear tailwinds crosswinds controlPointsLongLat setWeatherDist days...
-        tailjoe crossjoe;
+        tailjoe crossjoe ;
 
 
     %% Main Loop
@@ -124,7 +124,7 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
         for i = 1:length(events)
             
             % If event start logic is true, then start the event
-            if events{i}.startCondition(aircraftObject) == true 
+            if events{i}.startCondition(aircraftObject) == true
 
                 % If the event has a new ode, then set the new ode
                 if isfield(events{i}, 'ode')
