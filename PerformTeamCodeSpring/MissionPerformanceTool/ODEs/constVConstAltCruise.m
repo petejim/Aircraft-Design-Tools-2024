@@ -16,6 +16,9 @@ function [] = constVConstAltCruise(aircraftObject, airspeed)
     %   aircraftObject.wDot: rate of change of weight [lb/s]
     %   aircraftObject.x: horizontal position [ft]
     %   aircraftObject.w: weight [lb]
+    %   aircraftObject.SFC: specific fuel consumption [lb/hr/hp]
+    %   aircraftObject.rho: air density [slug/ft^3]
+
 
     % Convert airspeed from KTAS ft/s TAS
     airspeed = missionConversions(airspeed, "ktToft_s");
@@ -51,11 +54,19 @@ function [] = constVConstAltCruise(aircraftObject, airspeed)
 
     %% Propulsion
 
-    % Get sfc from engine model [lb/hr/hp] , shaft power [hp]
-    [SFC, shaftPowerHp] = aircraftObject.getSFC(power);
+    % Get sfc from engine model [lb/hr/hp] , shaft power [hp], and flow power [lb ft/s]
+    [SFC, shaftPowerHp, ~, powerAvail, powerUsed] = aircraftObject.getSFC(power);
+
+    % Set power available and power used
+    aircraftObject.engPowAvail = powerAvail;
+
+    aircraftObject.engPowUsed = powerUsed;
+
+    % Set SFC
+    aircraftObject.SFC = SFC;
 
     % obtain change in fuel weight [lb/s]
-    aircraftObject.wDot = -SFC * shaftPowerHp / 3600;
+    aircraftObject.wDot = -SFC * powerUsed / 3600;
 
     %% State updates
 

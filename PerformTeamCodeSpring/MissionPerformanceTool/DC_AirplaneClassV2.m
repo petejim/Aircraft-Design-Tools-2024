@@ -91,6 +91,20 @@ classdef DC_AirplaneClassV2 < handle
         CD
         % Drag [lbf]
         drag
+        % SFC [lb/hp/hr]
+        SFC
+        % Percent range struct
+        percentRange
+        % Cruise climb struct (should be zerod out at the start of each cruise climb)
+        cruiseClimb
+        % obj.cruiseClimb.CL
+        % obj.cruiseClimb.VTAS  [ft/s]
+        % Num engines running
+        engCount
+        % Available engine power [hp]
+        engPowAvail
+        % Total engine power in use [hp]
+        engPowUsed
 
     end
 
@@ -138,7 +152,7 @@ classdef DC_AirplaneClassV2 < handle
 
             % load engine matrix SL
             engMatSL_table = load("CD135_SL.mat");
-            obj.engMatSL = table2array(engMatSL_table.ans);
+            obj.engMatSL = table2array(engMatSL_table.engineData);
             
             % load propeller data
             % for now, propeller data comes from piper arrow
@@ -338,7 +352,7 @@ classdef DC_AirplaneClassV2 < handle
         function [] = setEngine(obj, path)
             % Function sets the engine data for the aircraft object
             % path: path to the engine data spreadsheet (assumes .xlsx first column is power, second column is SFC, third column is RPM)
-            engineData = table2array(load(path).ans);
+            engineData = table2array(load(path).engineData);
             obj.engMatSL = engineData;
 
         end
@@ -358,7 +372,7 @@ classdef DC_AirplaneClassV2 < handle
 
         end
 
-        function [SFC, shaftPower] = getSFC(obj, powerRequired)
+        function [SFC, shaftPower, flowPower, powerAvail, powerUsed] = getSFC(obj, powerRequired)
             % Function returns the specific fuel consumption for a given power setting
             % powerRequired: power from drag [lb-ft/s]
             % obj.engMatSL: engine data
@@ -366,9 +380,11 @@ classdef DC_AirplaneClassV2 < handle
             % Returns:
             % SFC: specific fuel consumption [lb/hp/hr]
             % shaftPower: shaft power [hp]
+            % flowPower: power from fuel flow [lb-ft/s]
 
             % Propeller efficiency
             power = missionConversions(powerRequired / obj.eta_p, "lb_ft_sTohp");
+            % Now power = shaft power
 
             % Returns:
             % SFC: specific fuel consumption [lb/hp/hr]
@@ -391,6 +407,10 @@ classdef DC_AirplaneClassV2 < handle
                 % Adjust power
                 powerRatio = 1.132 * ratio - 0.132;
 
+            else
+
+                powerRatio = 1;
+
             end
 
             if obj.y > obj.crit_alt
@@ -406,6 +426,15 @@ classdef DC_AirplaneClassV2 < handle
 
             % Set shaft power
             shaftPower = power;
+
+            % Set power used
+            powerUsed = shaftPower;
+
+            % Set power available
+            powerAvail = max(obj.engMatSL(:,1)) * powerRatio;
+
+            % Set flow power
+            flowPower = missionConversions(power, "hpTolb_ft_s");
 
         end
 
@@ -446,8 +475,79 @@ classdef DC_AirplaneClassV2 < handle
             % x velocity
             obj.Vx = obj.TAS*cos(alpha) + tailwindLoc;
 
+
         end
 
-    end
+        function [CL_desired] = getPercentRangeCL(obj, percentRange)
+            % Function calculates the lift coefficient for a given percent of the range
+            % and the current drag polar and state. Always returns the smaller (faster)
+            % lift coefficient of the two possible values. Will store the CL for this
+            % percent range in the object for future use.
 
+            % percentRange: percent of the range
+
+            % Check if the CL for this percent range has already been calculated
+            if ~isempty(obj.percentRange)
+                for i = 1:length(obj.percentRange)
+                    if obj.percentRange(i,1) == percentRange
+                        CL_desired = obj.percentRange(i,2);
+                        return
+                    end
+                end
+            end
+
+            L_D = obj.dragPolar(:,2)./obj.dragPolar(:,1);
+            
+            [L_D_max, indMax] = max(L_D);
+
+            % Get L/D for lower CL side of max L/D
+            L_D_lower = L_D(1:indMax);
+
+            % Get CL for lower CL side of max L/D
+            CL_lower = obj.dragPolar(1:indMax,2);
+
+            L_D_desired = percentRange * L_D_max / 100;
+
+            % Find CL for desired L/D
+            CL_desired = interp1(L_D_lower, CL_lower, L_D_desired);
+
+            % Store CL for this percent range
+            if isempty(obj.percentRange)
+                obj.percentRange = [percentRange, CL_desired];
+            else
+                obj.percentRange = [obj.percentRange; percentRange, CL_desired];
+            end
+
+        end
+
+        function [TAS] = getTAS_SLF(obj)
+            % Function calculates the true airspeed for the aircraft in straight and level flight
+            % obj.W: weight
+            % obj.rho: air density
+            % obj.S: wing area
+            % obj.CL: lift coefficient
+
+            % Returns:
+            % TAS: true airspeed [ft/s]
+
+            TAS = sqrt(2 * obj.W / (obj.rho * obj.S * obj.CL));
+
+        end
+
+        function [rho] = getRho(obj)
+            % Function calculates the air density to maintain steady
+            % level flight
+
+            % obj.W: weight
+            % obj.S: wing area
+            % obj.CL: lift coefficient
+            % obj.TAS: true airspeed
+
+            % Returns:
+            % rho: air density [slug/ft^3]
+
+            rho = 2 * obj.W / (obj.S * obj.TAS^2 * obj.CL);
+
+        end
+    end
 end

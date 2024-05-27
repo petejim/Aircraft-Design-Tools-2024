@@ -224,9 +224,15 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
 
         % Find local wind data and set it in the aircraft object
         windFinder(aircraftObject, route);
+    
+%         try
 
         % Solve for a time step
         simSolver(aircraftObject);
+        
+%         catch
+%             disp("bruh")
+%         end
 
         % Increment the step number
         stepNum = stepNum + 1;
@@ -243,7 +249,7 @@ function [dataTable] = simulateMission(aircraftObject, route, events, fieldsToSt
 
 
     % Chop off the extra rows
-    dataTable = dataTable(1:stepNum, :);
+    dataTable = dataTable(1:stepNum - 1, :);
 
 end
 
@@ -256,7 +262,7 @@ function [newTable] = extractData(aircraftObject, fieldsToStore)
         fieldName = fieldsToStore{i};
         fieldValue = aircraftObject.(fieldName);
         if isempty(fieldValue)
-            fieldValue = nan;
+            fieldValue = 0;
         end
         newTable.(fieldName) = fieldValue;
     end

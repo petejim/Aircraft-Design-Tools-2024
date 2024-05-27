@@ -60,7 +60,7 @@ function [] = windFinder(aircraftObject, route)
     %% Checks
 
     % Check if the input values are outside the range
-    if xp < xMin || yp < yMin || yp > yMax || zp < zMin || zp > zMax
+    if xp > xMin || yp < yMin || yp > yMax || zp < zMin || zp > zMax
         error('The input values are outside the range of the original data.')
         % This means that there was not enough weather data generated, the plane is too high or too low, or idk
     end
