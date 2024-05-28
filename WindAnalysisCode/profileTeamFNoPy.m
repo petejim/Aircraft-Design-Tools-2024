@@ -23,8 +23,8 @@ function [tail,cross,u,v,distance,point_distance,latitudes,longitudes,unitx,unit
 % date       = date of flight (format: 'dd-mmm-yyyy HH:MM:SS')        [str]
 
 %% Outputs
-% tail           = tailwind component of wind at each point            [kt]
-% cross          = crosswind component of wind at each point           [kt]
+% tail           = tailwind component of wind at each point            [m/s]
+% cross          = crosswind component of wind at each point           [m/s]
 % u              = u component of wind at each point                   [kt]
 % v              = v component of wind at each point                   [kt]
 % distance       = distance from start to each point                   [nm]
